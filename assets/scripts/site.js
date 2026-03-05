@@ -87,6 +87,46 @@ function normalizeImageUrlList(rawValue) {
   return urls;
 }
 
+function specsToMultilineText(specs) {
+  if (!specs || typeof specs !== 'object') return '';
+  return Object.entries(specs)
+    .filter(([k, v]) => String(k || '').trim() && String(v || '').trim())
+    .map(([k, v]) => `${String(k).trim()}: ${String(v).trim()}`)
+    .join('\n');
+}
+
+function parseSpecsText(rawValue) {
+  const specs = {};
+  String(rawValue || '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .forEach((line) => {
+      const parts = line.split(':');
+      if (parts.length < 2) return;
+      const key = parts.shift().trim();
+      const value = parts.join(':').trim();
+      if (key && value) specs[key] = value;
+    });
+  return specs;
+}
+
+function splitListValues(rawValue) {
+  return String(rawValue || '')
+    .split(/[\n,]/)
+    .map((v) => v.trim())
+    .filter(Boolean);
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ============================================================
 // SUPABASE CLIENT
 // ============================================================
@@ -375,6 +415,7 @@ function renderProducts(list) {
     const inWish = wishlist.includes(String(p.id));
     const img = p.images && p.images.length ? `<img src="${p.images[0]}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'"/>` : `<div class="icon-placeholder">${catIcon(p.category)}</div>`;
     const catLabel = cardCategoryLabel(p.category);
+    const tagline = String(p.tagline || '').trim();
     return `<div class="p-card p-card-wide" onclick="openProduct('${p.id}')">
       <div class="p-card-img">
         ${img}
@@ -386,6 +427,7 @@ function renderProducts(list) {
         <div class="p-card-body">
           <div class="p-card-brand">${p.brand}</div>
           <div class="p-card-name">${p.name}</div>
+          ${tagline ? `<div class="p-card-tagline">${tagline}</div>` : ''}
           <div class="p-card-meta">
             <span class="p-card-meta-icon">${catIcon(p.category)}</span>
             <span>${catLabel}</span>
@@ -434,7 +476,21 @@ function setCat(cat, opts = {}) {
 function doSearch(q) {
   const query = q.trim().toLowerCase();
   if (!query) { renderProducts(filterProducts(currentCat)); return; }
-  renderProducts(products.filter(p => p.active !== false && (p.name.toLowerCase().includes(query) || p.brand.toLowerCase().includes(query) || p.category.toLowerCase().includes(query))));
+  renderProducts(products.filter((p) => {
+    if (p.active === false) return false;
+    const specsText = p.specs && typeof p.specs === 'object' ? Object.values(p.specs).join(' ') : '';
+    const highlightsText = Array.isArray(p.highlights) ? p.highlights.join(' ') : '';
+    const haystack = [
+      p.name,
+      p.brand,
+      p.category,
+      p.tagline || '',
+      p.sku || '',
+      specsText,
+      highlightsText,
+    ].join(' ').toLowerCase();
+    return haystack.includes(query);
+  }));
 }
 
 // ============================================================
@@ -477,6 +533,12 @@ function renderDetailInfo(p) {
   const stockCls = stock === 0 ? 'out' : stock < 5 ? 'low' : 'in';
   const stockTxt = stock === 0 ? 'Out of Stock' : stock < 5 ? `Only ${stock} left` : 'In Stock';
   const specs = p.specs || {};
+  const highlights = Array.isArray(p.highlights) ? p.highlights.filter(Boolean) : [];
+  const descWithHighlights = `${p.description || 'Premium product by ' + p.brand}${
+    highlights.length
+      ? `<ul class="d-highlights">${highlights.slice(0, 4).map((h) => `<li>${escapeHtml(h)}</li>`).join('')}</ul>`
+      : ''
+  }`;
   const variantsHTML = p.variants && p.variants.length ? `
     <div class="d-label">Variant / Colour</div>
     <div class="d-variants" id="variantRow">
@@ -485,6 +547,7 @@ function renderDetailInfo(p) {
   document.getElementById('detailInfo').innerHTML = `
     <div class="d-brand">${p.brand} Â· ${p.category.toUpperCase()}</div>
     <div class="d-name">${p.name}</div>
+    ${p.tagline ? `<div class="d-tagline">${p.tagline}</div>` : ''}
     <div class="d-price-row">
       <span class="d-price">KES ${Number(p.price).toLocaleString()}</span>
       ${p.original_price ? `<span class="d-orig">KES ${Number(p.original_price).toLocaleString()}</span>` : ''}
@@ -520,7 +583,7 @@ function renderDetailInfo(p) {
       <div class="d-tab" onclick="switchDTab('specs',this)">Specs</div>
       <div class="d-tab" onclick="switchDTab('delivery',this)">Delivery</div>
     </div>
-    <div id="dTabDesc" class="d-tab-content">${p.description || 'Premium product by ' + p.brand}</div>
+    <div id="dTabDesc" class="d-tab-content">${descWithHighlights}</div>
     <div id="dTabSpecs" style="display:none;">
       ${Object.keys(specs).length ? `<div class="specs-table">${Object.entries(specs).map(([k,v])=>`<div class="spec-row"><div class="spec-key">${k}</div><div class="spec-val">${v}</div></div>`).join('')}</div>` : '<p style="color:var(--text3)">Specs not available.</p>'}
     </div>
@@ -1089,7 +1152,7 @@ function renderAdminProducts() {
   if (!tbody) return;
   tbody.innerHTML = products.map(p => `
     <tr>
-      <td><div class="td-prod"><div class="td-thumb">${catIcon(p.category)}</div><div><div class="td-name">${p.name}</div><div class="td-sub">${p.brand}</div></div></div></td>
+      <td><div class="td-prod"><div class="td-thumb">${p.images && p.images[0] ? `<img src="${p.images[0]}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='${catIcon(p.category).replace(/'/g, '&#39;')}'"/>` : catIcon(p.category)}</div><div><div class="td-name">${p.name}</div><div class="td-sub">${p.brand}${p.sku ? ' | SKU: ' + p.sku : ''}${p.images?.length ? ' | ' + p.images.length + ' image' + (p.images.length === 1 ? '' : 's') : ''}</div></div></div></td>
       <td><span class="tag-chip">${p.category}</span></td>
       <td style="font-family:var(--font-m)">KES ${Number(p.price).toLocaleString()}</td>
       <td style="font-family:var(--font-m)">${p.stock}</td>
@@ -1134,14 +1197,20 @@ function openProdForm(id) {
   const wrap = document.getElementById('prodFormWrap');
   const categories = [...new Set([...DEFAULT_CATEGORIES, ...getAvailableCategories()])];
   const brands = getAvailableBrands();
+  const images = Array.isArray(p?.images) ? p.images.filter(Boolean) : [];
+  const mainImage = images[0] || '';
+  const extraImages = images.slice(1).join('\n');
+  const specsText = specsToMultilineText(p?.specs || {});
+  const highlights = Array.isArray(p?.highlights) ? p.highlights.join(', ') : '';
+
   wrap.style.display = 'block';
   wrap.innerHTML = `<div class="prod-form">
     <h4>${p?'Edit: '+p.name:'Add New Product'}
       <button class="btn-cta outline" style="width:auto;padding:8px 14px;font-size:12px;" onclick="document.getElementById('prodFormWrap').style.display='none'">Cancel</button>
     </h4>
     <div class="form-grid-3">
-      <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="pf-name" value="${p?p.name:''}"/></div>
-      <div class="form-group"><label class="form-label">Brand</label><input class="form-input" id="pf-brand" list="pf-brand-list" value="${p?p.brand:''}" placeholder="e.g. Samsung"/><datalist id="pf-brand-list">${brands.map((b)=>`<option value="${b}"></option>`).join('')}</datalist></div>
+      <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="pf-name" value="${escapeHtml(p?p.name:'')}"/></div>
+      <div class="form-group"><label class="form-label">Brand</label><input class="form-input" id="pf-brand" list="pf-brand-list" value="${escapeHtml(p?p.brand:'')}" placeholder="e.g. Samsung"/><datalist id="pf-brand-list">${brands.map((b)=>`<option value="${escapeHtml(b)}"></option>`).join('')}</datalist></div>
       <div class="form-group"><label class="form-label">Category</label><input class="form-input" id="pf-cat" list="pf-cat-list" value="${p?normalizeCategoryValue(p.category):''}" placeholder="e.g. smartphones"/><datalist id="pf-cat-list">${categories.map((c)=>`<option value="${c}">${categoryDisplayName(c)}</option>`).join('')}</datalist></div>
     </div>
     <div class="form-grid-3">
@@ -1149,21 +1218,44 @@ function openProdForm(id) {
       <div class="form-group"><label class="form-label">Original Price</label><input type="number" class="form-input" id="pf-orig" value="${p&&p.original_price?p.original_price:''}"/></div>
       <div class="form-group"><label class="form-label">Stock</label><input type="number" class="form-input" id="pf-stock" value="${p?p.stock:0}"/></div>
     </div>
-    <div class="form-grid-2">
+    <div class="form-grid-3">
       <div class="form-group"><label class="form-label">Badge</label>
         <select class="form-select" id="pf-badge"><option value="">None</option>${['New','Hot','Sale'].map(b=>`<option ${p&&p.badge===b?'selected':''}>${b}</option>`).join('')}</select>
       </div>
-      <div class="form-group"><label class="form-label">Variants (comma separated)</label><input class="form-input" id="pf-variants" value="${p&&p.variants?p.variants.join(', '):''}"/></div>
+      <div class="form-group"><label class="form-label">SKU / Model Code</label><input class="form-input" id="pf-sku" placeholder="e.g. SM-S928B" value="${escapeHtml(p?.sku || '')}"/></div>
+      <div class="form-group"><label class="form-label">Variants (comma separated)</label><input class="form-input" id="pf-variants" value="${escapeHtml(p&&p.variants?p.variants.join(', '):'')}"/></div>
     </div>
-    <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="pf-desc">${p?p.description:''}</textarea></div>
-    <div class="form-group"><label class="form-label">Product Images (comma/new-line URLs)</label><input class="form-input" id="pf-images" oninput="updateImgPreviews()" placeholder="Paste links from Pinterest, Postimg, Google Images or direct image URLs" value="${p&&p.images?p.images.join(', '):''}"/>
+    <div class="form-grid-2">
+      <div class="form-group"><label class="form-label">Card Tagline</label><input class="form-input" id="pf-tagline" placeholder="Short line shown on product cards" value="${escapeHtml(p?.tagline || '')}"/></div>
+      <div class="form-group"><label class="form-label">Highlights (comma separated)</label><input class="form-input" id="pf-highlights" placeholder="e.g. 120Hz Display, 50MP Camera, 5000mAh" value="${escapeHtml(highlights)}"/></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="pf-desc">${escapeHtml(p?p.description:'')}</textarea></div>
+      <div class="form-group"><label class="form-label">Specs (one per line: Key: Value)</label><textarea class="form-textarea" id="pf-specs" placeholder="Display: 6.7 AMOLED&#10;RAM: 12GB&#10;Storage: 256GB">${escapeHtml(specsText)}</textarea></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Main Image URL</label>
+      <input class="form-input" id="pf-main-image" placeholder="https://... (primary image)" value="${escapeHtml(mainImage)}"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Additional Image URLs</label>
+      <textarea class="form-textarea pf-img-textarea" id="pf-gallery-images" placeholder="One URL per line, or comma separated">${escapeHtml(extraImages)}</textarea>
+      <div class="pf-img-tools">
+        <button type="button" class="btn-cta outline pf-mini-btn" onclick="normalizeProductImageInputs(true)">Normalize Image URLs</button>
+        <span class="pf-img-status" id="pfImgStatus">No images yet</span>
+      </div>
+      <input type="hidden" id="pf-images" value="${escapeHtml(images.join(', '))}"/>
       <div style="font-size:11.5px;color:var(--text4);margin-top:7px;">Google/Pinterest redirect links are auto-normalized to direct image URLs when possible.</div>
       <div class="prod-img-grid" id="pfImgGrid" style="margin-top:10px;">
-        <div class="prod-img-slot" id="pfSlot0"><div class="pis-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:18px;height:18px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Img 1</span></div></div>
-        <div class="prod-img-slot" id="pfSlot1"><div class="pis-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:18px;height:18px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Img 2</span></div></div>
-        <div class="prod-img-slot" id="pfSlot2"><div class="pis-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:18px;height:18px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Img 3</span></div></div>
-        <div class="prod-img-slot" id="pfSlot3"><div class="pis-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:18px;height:18px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Img 4</span></div></div>
+        <div class="prod-img-slot" id="pfSlot0" onclick="focusMainImageInput()"><div class="pis-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:18px;height:18px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Main</span></div></div>
+        <div class="prod-img-slot" id="pfSlot1" onclick="focusGalleryImageInput()"><div class="pis-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:18px;height:18px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Img 2</span></div></div>
+        <div class="prod-img-slot" id="pfSlot2" onclick="focusGalleryImageInput()"><div class="pis-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:18px;height:18px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Img 3</span></div></div>
+        <div class="prod-img-slot" id="pfSlot3" onclick="focusGalleryImageInput()"><div class="pis-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:18px;height:18px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Img 4</span></div></div>
       </div>
+    </div>
+    <div class="pf-preview-wrap">
+      <div class="pf-preview-head">Live Product Card Preview</div>
+      <div id="pfCardPreview" class="pf-card-preview"></div>
     </div>
     <div style="display:flex;gap:10px;margin-top:4px;">
       <button class="btn-cta blue" style="width:auto;padding:11px 22px;" onclick="saveProd('${id||''}')">
@@ -1173,7 +1265,9 @@ function openProdForm(id) {
       <button class="btn-cta outline" style="width:auto;padding:11px 18px;" onclick="document.getElementById('prodFormWrap').style.display='none'">Cancel</button>
     </div>
   </div>`;
-  updateImgPreviews();
+  bindProdFormLivePreview();
+  normalizeProductImageInputs(false);
+  updateProductFormPreview();
   wrap.scrollIntoView({behavior:'smooth'});
 }
 
@@ -1185,17 +1279,40 @@ async function saveProd(id) {
   const orig  = parseFloat(document.getElementById('pf-orig').value) || null;
   const stock = parseInt(document.getElementById('pf-stock').value) || 0;
   const badge = document.getElementById('pf-badge').value || null;
+  const sku = document.getElementById('pf-sku').value.trim();
+  const tagline = document.getElementById('pf-tagline').value.trim();
   const desc  = document.getElementById('pf-desc').value.trim();
-  const variants = document.getElementById('pf-variants').value.split(',').map(v=>v.trim()).filter(Boolean);
-  const images   = normalizeImageUrlList(document.getElementById('pf-images').value);
+  const specs = parseSpecsText(document.getElementById('pf-specs').value);
+  const variants = splitListValues(document.getElementById('pf-variants').value);
+  const highlights = splitListValues(document.getElementById('pf-highlights').value);
+  const images   = normalizeProductImageInputs(false);
   if (!name||!brand||!price||!cat) { toast('err','Validation error','Name, brand, category and price are required'); return; }
-  const obj = { name, slug:name.toLowerCase().replace(/[^a-z0-9]+/g,'-'), category:cat, brand, price, original_price:orig, stock, badge, description:desc, variants, images, active:true };
+  if (!images.length) toast('inf', 'No product image', 'You can still save, but cards look better with at least one image URL.');
+  const baseObj = { name, slug:name.toLowerCase().replace(/[^a-z0-9]+/g,'-'), category:cat, brand, price, original_price:orig, stock, badge, description:desc, variants, images, active:true };
+  const obj = {
+    ...baseObj,
+    specs,
+    sku: sku || null,
+    tagline: tagline || null,
+    highlights,
+  };
   if (id) {
     const idx = products.findIndex(p => String(p.id) === String(id));
     if (idx > -1) { products[idx] = {...products[idx], ...obj}; }
     // Upsert to Supabase
     if (CFG.ENABLE_SUPABASE) {
-      try { await sbAdmin.from('products').update(obj).eq('id', id); } catch(e) { console.warn('Supabase update failed'); }
+      try {
+        const { error } = await sbAdmin.from('products').update(obj).eq('id', id);
+        if (error) throw error;
+      } catch(e) {
+        try {
+          const { error: fallbackError } = await sbAdmin.from('products').update(baseObj).eq('id', id);
+          if (fallbackError) throw fallbackError;
+          toast('inf', 'Saved with core fields', 'Your table may not yet have sku/tagline/highlights/specs columns.');
+        } catch (_) {
+          console.warn('Supabase update failed');
+        }
+      }
     }
     toast('ok','Product Updated', name);
   } else {
@@ -1203,7 +1320,20 @@ async function saveProd(id) {
     products.unshift(newP);
     // Insert to Supabase
     if (CFG.ENABLE_SUPABASE) {
-      try { const {data} = await sbAdmin.from('products').insert([{...obj}]).select(); if(data?.[0]) newP.id = data[0].id; } catch(e) { console.warn('Supabase insert failed'); }
+      try {
+        const { data, error } = await sbAdmin.from('products').insert([{...obj}]).select();
+        if (error) throw error;
+        if (data?.[0]) newP.id = data[0].id;
+      } catch(e) {
+        try {
+          const { data: fallbackData, error: fallbackError } = await sbAdmin.from('products').insert([{...baseObj}]).select();
+          if (fallbackError) throw fallbackError;
+          if (fallbackData?.[0]) newP.id = fallbackData[0].id;
+          toast('inf', 'Saved with core fields', 'Your table may not yet have sku/tagline/highlights/specs columns.');
+        } catch (_) {
+          console.warn('Supabase insert failed');
+        }
+      }
     }
     toast('ok','Product Added', name);
   }
@@ -1616,10 +1746,75 @@ function applyCatImg(cat) {
 }
 
 // ===== PRODUCT FORM IMAGE PREVIEWS =====
+function collectProductImageUrlsFromInputs() {
+  const mainInput = document.getElementById('pf-main-image');
+  const galleryInput = document.getElementById('pf-gallery-images');
+  const mainRaw = mainInput ? mainInput.value.trim() : '';
+  const galleryRaw = galleryInput ? galleryInput.value : '';
+  const mainUrl = normalizeImageUrl(mainRaw);
+  const galleryUrls = normalizeImageUrlList(galleryRaw);
+  const urls = [];
+  const seen = new Set();
+
+  if (mainUrl && !seen.has(mainUrl)) {
+    urls.push(mainUrl);
+    seen.add(mainUrl);
+  }
+  galleryUrls.forEach((url) => {
+    if (!seen.has(url)) {
+      urls.push(url);
+      seen.add(url);
+    }
+  });
+
+  const rawGalleryCount = splitListValues(galleryRaw).length;
+  const invalidMainCount = mainRaw && !mainUrl ? 1 : 0;
+  const invalidGalleryCount = Math.max(0, rawGalleryCount - galleryUrls.length);
+
+  return {
+    urls,
+    mainUrl,
+    galleryUrls,
+    invalidCount: invalidMainCount + invalidGalleryCount,
+  };
+}
+
+function normalizeProductImageInputs(showToast = false) {
+  const mainInput = document.getElementById('pf-main-image');
+  const galleryInput = document.getElementById('pf-gallery-images');
+  const hiddenInput = document.getElementById('pf-images');
+  if (!hiddenInput) return [];
+
+  const { urls, mainUrl, galleryUrls, invalidCount } = collectProductImageUrlsFromInputs();
+  if (mainInput && mainUrl) mainInput.value = mainUrl;
+  if (galleryInput) {
+    const extras = galleryUrls.filter((url) => url !== mainUrl);
+    galleryInput.value = extras.join('\n');
+  }
+  hiddenInput.value = urls.join(', ');
+
+  const statusEl = document.getElementById('pfImgStatus');
+  if (statusEl) {
+    if (!urls.length) {
+      statusEl.textContent = invalidCount ? `0 valid images (${invalidCount} invalid URL${invalidCount === 1 ? '' : 's'})` : 'No images yet';
+    } else {
+      statusEl.textContent = `${urls.length} valid image URL${urls.length === 1 ? '' : 's'}${invalidCount ? ` (${invalidCount} invalid ignored)` : ''}`;
+    }
+  }
+
+  updateImgPreviews();
+  if (showToast) {
+    if (urls.length) toast('ok', 'Images normalized', `${urls.length} image URL${urls.length === 1 ? '' : 's'} ready`);
+    else toast('err', 'No valid image URLs', 'Paste direct image links or supported redirect links.');
+  }
+  return urls;
+}
+
 function updateImgPreviews() {
   const input = document.getElementById('pf-images');
   if (!input) return;
   const urls = normalizeImageUrlList(input.value);
+  const statusEl = document.getElementById('pfImgStatus');
   for (let i = 0; i < 4; i++) {
     const slot = document.getElementById('pfSlot' + i);
     if (!slot) continue;
@@ -1630,7 +1825,12 @@ function updateImgPreviews() {
       const img = document.createElement('img');
       img.src = url;
       img.style.cssText = 'width:100%;height:100%;object-fit:cover;position:absolute;inset:0;';
-      img.onerror = () => { slot.classList.remove('has-img'); };
+      img.onerror = () => {
+        slot.classList.remove('has-img');
+        if (statusEl && !statusEl.textContent.includes('invalid')) {
+          statusEl.textContent = `${urls.length} image URL${urls.length === 1 ? '' : 's'} loaded (1 failed)`;
+        }
+      };
       slot.insertBefore(img, slot.firstChild);
     } else {
       slot.classList.remove('has-img');
@@ -1639,7 +1839,90 @@ function updateImgPreviews() {
     }
   }
 }
-function focusImgInput() {
-  const el = document.getElementById('pf-images');
+
+function updateProductFormPreview() {
+  const preview = document.getElementById('pfCardPreview');
+  if (!preview) return;
+
+  const name = document.getElementById('pf-name')?.value.trim() || 'Product Name';
+  const brand = document.getElementById('pf-brand')?.value.trim() || 'Brand';
+  const cat = normalizeCategoryValue(document.getElementById('pf-cat')?.value || 'accessories');
+  const price = parseFloat(document.getElementById('pf-price')?.value || '0') || 0;
+  const original = parseFloat(document.getElementById('pf-orig')?.value || '0') || 0;
+  const badge = document.getElementById('pf-badge')?.value || '';
+  const tagline = document.getElementById('pf-tagline')?.value.trim() || '';
+  const stock = parseInt(document.getElementById('pf-stock')?.value || '0', 10) || 0;
+  const sku = document.getElementById('pf-sku')?.value.trim() || '';
+  const highlights = splitListValues(document.getElementById('pf-highlights')?.value || '').slice(0, 3);
+  const imageUrls = normalizeImageUrlList(document.getElementById('pf-images')?.value || '');
+  const leadImage = imageUrls[0];
+  const discount = original > price && price > 0 ? Math.round((1 - price / original) * 100) : 0;
+  const stockText = stock <= 0 ? 'Out of stock' : stock < 5 ? `Only ${stock} left` : 'In stock';
+
+  preview.innerHTML = `
+    <div class="pfp-shell">
+      <div class="pfp-media ${leadImage ? '' : 'pfp-fallback'}">
+        ${leadImage ? `<img src="${leadImage}" alt="${escapeHtml(name)}" onerror="this.remove(); this.parentElement.classList.add('pfp-fallback')"/>` : ''}
+        ${catIcon(cat)}
+        ${badge ? `<span class="pfp-badge">${escapeHtml(badge)}</span>` : ''}
+      </div>
+      <div class="pfp-body">
+        <div class="pfp-brand">${escapeHtml(brand)}</div>
+        <div class="pfp-name">${escapeHtml(name)}</div>
+        ${tagline ? `<div class="pfp-tagline">${escapeHtml(tagline)}</div>` : ''}
+        <div class="pfp-meta">${escapeHtml(categoryDisplayName(cat))}${sku ? ` | SKU: ${escapeHtml(sku)}` : ''}</div>
+        ${highlights.length ? `<div class="pfp-highlights">${highlights.map((h) => `<span>${escapeHtml(h)}</span>`).join('')}</div>` : ''}
+        <div class="pfp-footer">
+          <div>
+            <strong>KES ${price ? price.toLocaleString() : '0'}</strong>
+            ${original > 0 ? `<small>KES ${original.toLocaleString()}</small>` : ''}
+            ${discount > 0 ? `<em>-${discount}%</em>` : ''}
+          </div>
+          <span class="pfp-stock">${stockText}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function bindProdFormLivePreview() {
+  const inputIds = [
+    'pf-name', 'pf-brand', 'pf-cat', 'pf-price', 'pf-orig', 'pf-stock',
+    'pf-badge', 'pf-sku', 'pf-tagline', 'pf-desc', 'pf-specs', 'pf-variants', 'pf-highlights',
+  ];
+  inputIds.forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const evt = el.tagName === 'SELECT' ? 'change' : 'input';
+    el.addEventListener(evt, updateProductFormPreview);
+  });
+
+  const mainImageInput = document.getElementById('pf-main-image');
+  if (mainImageInput) {
+    mainImageInput.addEventListener('input', () => {
+      normalizeProductImageInputs(false);
+      updateProductFormPreview();
+    });
+  }
+
+  const galleryInput = document.getElementById('pf-gallery-images');
+  if (galleryInput) {
+    galleryInput.addEventListener('input', () => {
+      normalizeProductImageInputs(false);
+      updateProductFormPreview();
+    });
+  }
+}
+
+function focusMainImageInput() {
+  const el = document.getElementById('pf-main-image');
   if (el) el.focus();
+}
+
+function focusGalleryImageInput() {
+  const el = document.getElementById('pf-gallery-images');
+  if (el) el.focus();
+}
+
+function focusImgInput() {
+  focusGalleryImageInput();
 }
