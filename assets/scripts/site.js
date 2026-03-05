@@ -1501,8 +1501,9 @@ function renderCartDrawer() {
   if (!cart.length) {
     wrap.innerHTML = `<div class="cd-empty">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-      <h4>Basket is empty</h4>
-      <p>Browse our electronics and add something great</p>
+      <h4>Your cart is empty</h4>
+      <p>Add products to your cart to view pricing and checkout details.</p>
+      <button class="btn-cta outline" style="width:auto;padding:10px 16px;" onclick="closeCart();navigate('explore')">Explore Products</button>
     </div>`;
     footer.innerHTML = '';
     return;
@@ -1524,6 +1525,10 @@ function renderCartDrawer() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:11px;height:11px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </div>
         </div>
+        <div class="cd-item-meta">
+          <span>Unit: KES ${Number(item.price).toLocaleString()}</span>
+          <span class="cd-line-total">Line: KES ${(item.price * item.qty).toLocaleString()}</span>
+        </div>
       </div>
       <div class="cd-item-right">
         <span class="cd-item-price">KES ${(item.price*item.qty).toLocaleString()}</span>
@@ -1532,14 +1537,19 @@ function renderCartDrawer() {
         </div>
       </div>
     </div>`).join('');
+  const subtotal = cartTotal();
+  const deliveryText = 'Calculated at checkout';
   footer.innerHTML = `
-    <div class="cd-total-row"><span>Subtotal (${cartCount()} items)</span><span>KES ${cartTotal().toLocaleString()}</span></div>
-    <div class="cd-total-row" style="font-size:11px;color:var(--text4)">Delivery calculated at checkout</div>
-    <div class="cd-total-row grand"><span>Estimated Total</span><span class="g-amount">KES ${cartTotal().toLocaleString()}</span></div>
-    <button class="btn-cta blue" onclick="closeCart();goCheckout()">
+    <div class="cd-summary-card">
+      <div class="cd-total-row"><span>Subtotal (${cartCount()} items)</span><span>KES ${subtotal.toLocaleString()}</span></div>
+      <div class="cd-total-row"><span>Delivery</span><span>${deliveryText}</span></div>
+      <div class="cd-total-row grand"><span>Estimated Total</span><span class="g-amount">KES ${subtotal.toLocaleString()}</span></div>
+    </div>
+    <button class="btn-cta blue cd-checkout-btn" onclick="closeCart();goCheckout()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-      Checkout
-    </button>`;
+      Proceed to Checkout
+    </button>
+    <button class="btn-cta outline cd-continue-btn" onclick="closeCart();navigate('explore')">Continue Shopping</button>`;
 }
 
 function openCart() {
