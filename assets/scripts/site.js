@@ -9,7 +9,8 @@ const CFG = {
   PAYSTACK_PK:      'pk_test_69283fe06fedab5b485efdae233a92be25d77c6b',
   PAYSTACK_SK:      'sk_test_fd736a649e04cd256f6328ac8b45aa007e87b99f',
   WHATSAPP:         '0705925800',
-  ADMIN_PASS:       'admin123',
+  ADMIN_EMAIL:      'admin@gmail.com',
+  ADMIN_PASS:       'Mmm@29315122',
 };
 
 function normalizeWhatsAppNumber(rawNumber) {
@@ -1095,7 +1096,7 @@ function openAdmin() {
   else {
     document.getElementById('adminLoginScreen').style.display = 'flex';
     document.getElementById('adminDashScreen').style.display = 'none';
-    setTimeout(() => document.getElementById('adminPwd').focus(), 200);
+    setTimeout(() => document.getElementById('adminEmail').focus(), 200);
   }
   document.body.style.overflow = 'hidden';
 }
@@ -1107,8 +1108,10 @@ function closeAdmin() {
 }
 
 function doAdminLogin() {
+  const email = document.getElementById('adminEmail').value.trim().toLowerCase();
   const pwd = document.getElementById('adminPwd').value;
-  if (pwd === CFG.ADMIN_PASS) {
+  const allowedEmail = String(CFG.ADMIN_EMAIL || '').trim().toLowerCase();
+  if (email === allowedEmail && pwd === CFG.ADMIN_PASS) {
     adminAuth = true;
     document.getElementById('adminErr').classList.remove('show');
     showAdminDash();
@@ -1124,6 +1127,15 @@ function showAdminDash() {
   adminTab('products');
 }
 
+function scrollAdminBodyTo(targetEl, behavior = 'smooth') {
+  const adminBody = document.querySelector('#adminDashScreen .admin-body');
+  if (!adminBody || !targetEl) return;
+  const bodyRect = adminBody.getBoundingClientRect();
+  const targetRect = targetEl.getBoundingClientRect();
+  const nextTop = adminBody.scrollTop + (targetRect.top - bodyRect.top) - 10;
+  adminBody.scrollTo({ top: Math.max(0, nextTop), behavior });
+}
+
 function adminTab(tab) {
   ['products','orders','settings'].forEach(t => {
     document.getElementById('admin'+t.charAt(0).toUpperCase()+t.slice(1)).style.display = t===tab ? '' : 'none';
@@ -1131,6 +1143,8 @@ function adminTab(tab) {
   });
   if (tab==='orders') loadAdminOrders();
   if (tab==='products') renderAdminProducts();
+  const adminBody = document.querySelector('#adminDashScreen .admin-body');
+  if (adminBody) adminBody.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function updateAdminStats() {
@@ -1268,7 +1282,7 @@ function openProdForm(id) {
   bindProdFormLivePreview();
   normalizeProductImageInputs(false);
   updateProductFormPreview();
-  wrap.scrollIntoView({behavior:'smooth'});
+  scrollAdminBodyTo(wrap, 'smooth');
 }
 
 async function saveProd(id) {

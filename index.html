@@ -210,6 +210,9 @@
         <input class="search-input" type="text" placeholder="Search phones, laptops, watches..." id="searchInput" name="q" aria-label="Search products" oninput="doSearch(this.value)"/>
       </div>
       <div class="topbar-actions">
+        <button class="admin-header-dot" type="button" onclick="openAdmin()" aria-label="Admin login" title="Admin Login">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </button>
         <div class="icon-btn" onclick="openCart()" title="Basket">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
           <span class="cart-badge" id="cartBadge" style="display:none">0</span>
@@ -397,7 +400,6 @@
       <div class="sf-bottom">
         <div class="sf-bottom-left">
           <p>© 2026 <strong>Lifetime Tech Limited</strong> · Nairobi, Kenya · All rights reserved</p>
-          <button class="sf-admin-link" type="button" onclick="openAdmin()">Admin Dashboard Access</button>
         </div>
         <p style="font-size:11px;color:var(--text5)">Payments secured by Paystack · M-Pesa · Visa · Mastercard</p>
       </div>
@@ -482,16 +484,19 @@
         </div>
         <h3>Admin Access</h3>
         <p>Staff portal for Life Time Limited</p>
-        <div class="error-box" id="adminErr">Wrong password. Try again.</div>
+        <div class="error-box" id="adminErr">Wrong email or pass code. Try again.</div>
         <div class="form-group">
-          <label class="form-label">Password</label>
-          <input type="password" class="form-input" id="adminPwd" placeholder="Enter password" onkeydown="if(event.key==='Enter')doAdminLogin()"/>
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="adminEmail" placeholder="admin@gmail.com" onkeydown="if(event.key==='Enter')doAdminLogin()"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pass Code</label>
+          <input type="password" class="form-input" id="adminPwd" placeholder="Enter pass code" onkeydown="if(event.key==='Enter')doAdminLogin()"/>
         </div>
         <button class="btn-cta blue" style="margin-bottom:10px;" onclick="doAdminLogin()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-          Sign In
+          Unlock Admin
         </button>
-        <div style="font-size:12px;color:var(--text3);margin-top:6px;">Demo password: <code style="color:var(--primary);background:var(--primary-lt);padding:2px 6px;border-radius:4px;">admin123</code></div>
         <button class="btn-cta outline" style="margin-top:8px;" onclick="closeAdmin()">Cancel</button>
       </div>
     </div>
@@ -714,11 +719,6 @@
     </div>
   </div>
 </div>
-
-<button class="admin-corner-btn" type="button" onclick="openAdmin()" aria-label="Open admin dashboard">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-  Admin
-</button>
 
 <!-- TOAST -->
 <div class="toast-wrap" id="toastWrap"></div>
