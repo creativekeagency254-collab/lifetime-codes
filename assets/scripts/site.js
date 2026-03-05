@@ -1,5 +1,5 @@
 ﻿// ============================================================
-// CONFIG â€” All keys for testing environment
+// CONFIG — All keys for testing environment
 // ============================================================
 const CFG = {
   ENABLE_SUPABASE:  true,
@@ -165,28 +165,28 @@ const FALLBACK_PRODUCTS = [
 ];
 
 const DELIVERY_ZONES = [
-  {region:'Nairobi',area:'Nairobi CBD',fee:150,days:'Same day â€“ 24hrs'},
-  {region:'Nairobi',area:'Westlands',fee:150,days:'Same day â€“ 24hrs'},
-  {region:'Nairobi',area:'Kilimani',fee:150,days:'Same day â€“ 24hrs'},
-  {region:'Nairobi',area:'Karen',fee:200,days:'1â€“2 days'},
-  {region:'Nairobi',area:'Eastleigh',fee:150,days:'Same day â€“ 24hrs'},
-  {region:'Nairobi',area:'South B / South C',fee:200,days:'1â€“2 days'},
-  {region:'Nairobi',area:'Langata',fee:200,days:'1â€“2 days'},
-  {region:'Nairobi',area:'Kasarani',fee:200,days:'1â€“2 days'},
-  {region:'Nairobi',area:'Ruaka / Ruiru',fee:280,days:'1â€“2 days'},
-  {region:'Central',area:'Thika',fee:320,days:'1â€“2 days'},
-  {region:'Central',area:'Kiambu',fee:320,days:'1â€“2 days'},
-  {region:'Central',area:'Nyeri',fee:420,days:'2â€“3 days'},
-  {region:'Rift Valley',area:'Nakuru',fee:520,days:'2â€“3 days'},
-  {region:'Rift Valley',area:'Eldoret',fee:620,days:'2â€“4 days'},
-  {region:'Rift Valley',area:'Kisumu',fee:620,days:'2â€“4 days'},
-  {region:'Coast',area:'Mombasa CBD',fee:520,days:'2â€“3 days'},
-  {region:'Coast',area:'Mombasa â€“ Nyali/North Coast',fee:620,days:'2â€“4 days'},
-  {region:'Eastern',area:'Machakos',fee:420,days:'2â€“3 days'},
-  {region:'Eastern',area:'Kitui',fee:520,days:'2â€“4 days'},
-  {region:'Western',area:'Kakamega',fee:620,days:'2â€“4 days'},
-  {region:'Nyanza',area:'Kisii',fee:620,days:'2â€“4 days'},
-  {region:'North Eastern',area:'Garissa',fee:750,days:'3â€“5 days'},
+  {region:'Nairobi',area:'Nairobi CBD',fee:150,days:'Same day – 24hrs'},
+  {region:'Nairobi',area:'Westlands',fee:150,days:'Same day – 24hrs'},
+  {region:'Nairobi',area:'Kilimani',fee:150,days:'Same day – 24hrs'},
+  {region:'Nairobi',area:'Karen',fee:200,days:'1–2 days'},
+  {region:'Nairobi',area:'Eastleigh',fee:150,days:'Same day – 24hrs'},
+  {region:'Nairobi',area:'South B / South C',fee:200,days:'1–2 days'},
+  {region:'Nairobi',area:'Langata',fee:200,days:'1–2 days'},
+  {region:'Nairobi',area:'Kasarani',fee:200,days:'1–2 days'},
+  {region:'Nairobi',area:'Ruaka / Ruiru',fee:280,days:'1–2 days'},
+  {region:'Central',area:'Thika',fee:320,days:'1–2 days'},
+  {region:'Central',area:'Kiambu',fee:320,days:'1–2 days'},
+  {region:'Central',area:'Nyeri',fee:420,days:'2–3 days'},
+  {region:'Rift Valley',area:'Nakuru',fee:520,days:'2–3 days'},
+  {region:'Rift Valley',area:'Eldoret',fee:620,days:'2–4 days'},
+  {region:'Rift Valley',area:'Kisumu',fee:620,days:'2–4 days'},
+  {region:'Coast',area:'Mombasa CBD',fee:520,days:'2–3 days'},
+  {region:'Coast',area:'Mombasa – Nyali/North Coast',fee:620,days:'2–4 days'},
+  {region:'Eastern',area:'Machakos',fee:420,days:'2–3 days'},
+  {region:'Eastern',area:'Kitui',fee:520,days:'2–4 days'},
+  {region:'Western',area:'Kakamega',fee:620,days:'2–4 days'},
+  {region:'Nyanza',area:'Kisii',fee:620,days:'2–4 days'},
+  {region:'North Eastern',area:'Garissa',fee:750,days:'3–5 days'},
 ];
 
 const BRANDING_PRESETS = {
@@ -915,7 +915,7 @@ function renderCategoryChips() {
 }
 
 // ============================================================
-// SUPABASE â€” Load Products
+// SUPABASE — Load Products
 // ============================================================
 async function loadProducts() {
   document.getElementById('productsGrid').innerHTML = `<div class="loader"><div class="spinner"></div> Loading from database...</div>`;
@@ -1180,7 +1180,7 @@ function renderDetailInfo(p) {
       ${p.variants.map(v => `<button class="v-btn ${v===selectedVariant?'active':''}" onclick="selectVariant('${v}',this)">${v}</button>`).join('')}
     </div>` : '';
   document.getElementById('detailInfo').innerHTML = `
-    <div class="d-brand">${p.brand} Â· ${p.category.toUpperCase()}</div>
+    <div class="d-brand">${p.brand} · ${p.category.toUpperCase()}</div>
     <div class="d-name">${p.name}</div>
     ${p.tagline ? `<div class="d-tagline">${p.tagline}</div>` : ''}
     <div class="d-price-row">
@@ -1225,10 +1225,10 @@ function renderDetailInfo(p) {
     <div id="dTabDelivery" style="display:none;">
       <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;font-size:13px;color:var(--text2);line-height:1.7;">
         <strong style="color:var(--primary)">Delivery Across Kenya</strong><br/>
-        Nairobi CBD/Westlands: KES 150 Â· Same day<br/>
-        Greater Nairobi: KES 200 Â· 1â€“2 days<br/>
-        Major towns (Mombasa, Kisumu, Nakuru): KES 500â€“620 Â· 2â€“4 days<br/>
-        Rest of Kenya: KES 420â€“750 Â· 2â€“5 days
+        Nairobi CBD/Westlands: KES 150 · Same day<br/>
+        Greater Nairobi: KES 200 · 1–2 days<br/>
+        Major towns (Mombasa, Kisumu, Nakuru): KES 500–620 · 2–4 days<br/>
+        Rest of Kenya: KES 420–750 · 2–5 days
       </div>
     </div>`;
 }
@@ -1265,7 +1265,7 @@ function addToCart(product, qty, variant) {
   else { cart.push({ key, productId:product.id, name:product.name, brand:product.brand, price:Number(product.price), variant:variant||null, qty, image:product.images?.[0]||null, category:product.category }); }
   localStorage.setItem('ltl2_cart', JSON.stringify(cart));
   updateCartUI();
-  toast('ok', 'Added to Basket', `${product.name}${variant?' Â· '+variant:''}`);
+  toast('ok', 'Added to Basket', `${product.name}${variant?' · '+variant:''}`);
 }
 
 function quickAdd(id) {
@@ -1336,7 +1336,7 @@ function renderCartDrawer() {
       </div>
       <div class="cd-item-info">
         <div class="cd-item-name">${item.name}</div>
-        <div class="cd-item-variant">${item.brand}${item.variant?' Â· '+item.variant:''}</div>
+        <div class="cd-item-variant">${item.brand}${item.variant?' · '+item.variant:''}</div>
         <div class="cd-qty-row">
           <div class="cq-btn" onclick="updateCartItemQty('${item.key}',-1)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:11px;height:11px"><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1377,7 +1377,7 @@ function closeCart() {
 }
 
 // ============================================================
-// CHECKOUT â€” TIMELINE (4 steps)
+// CHECKOUT — TIMELINE (4 steps)
 // ============================================================
 function goCheckout() {
   if (!cart.length) { toast('err','Basket is empty','Add items first'); return; }
@@ -1410,7 +1410,7 @@ function renderCkStep() {
   if (ckStep === 1) {
     // Step 1: Review basket + Delivery zone
     const zoneOpts = Object.entries(DELIVERY_ZONES.reduce((acc,z) => { if(!acc[z.region])acc[z.region]=[]; acc[z.region].push(z); return acc; },{}))
-      .map(([r,zones]) => `<optgroup label="${r}">${zones.map(z=>`<option value="${z.area}|${z.fee}|${z.days}">${z.area} â€” KES ${z.fee} (${z.days})</option>`).join('')}</optgroup>`).join('');
+      .map(([r,zones]) => `<optgroup label="${r}">${zones.map(z=>`<option value="${z.area}|${z.fee}|${z.days}">${z.area} — KES ${z.fee} (${z.days})</option>`).join('')}</optgroup>`).join('');
     area.innerHTML = `<div class="ck-main">
       <h3>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
@@ -1421,7 +1421,7 @@ function renderCkStep() {
           <div class="cd-item-img">${item.image?`<img src="${item.image}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'"/>`:catIcon(item.category)}</div>
           <div class="cd-item-info">
             <div class="cd-item-name">${item.name}</div>
-            <div class="cd-item-variant">${item.brand}${item.variant?' Â· '+item.variant:''} Â· Qty ${item.qty}</div>
+            <div class="cd-item-variant">${item.brand}${item.variant?' · '+item.variant:''} · Qty ${item.qty}</div>
           </div>
           <div class="cd-item-price" style="font-family:var(--font-m);font-size:13px;font-weight:700;">KES ${(item.price*item.qty).toLocaleString()}</div>
         </div>`).join('')}
@@ -1495,19 +1495,19 @@ function renderCkStep() {
           <div class="pay-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
           </div>
-          <div class="pay-info"><h4>Card / M-Pesa (Paystack)</h4><p>Secure instant payment Â· Get email invoice</p></div>
+          <div class="pay-info"><h4>Card / M-Pesa (Paystack)</h4><p>Secure instant payment · Get email invoice</p></div>
         </div>
         <div class="pay-option wa-opt" id="pm-whatsapp" onclick="selectPayMethod('whatsapp')">
           <div class="pay-radio"></div>
           <div class="pay-icon">
             <svg viewBox="0 0 24 24" fill="#22C55E"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
           </div>
-          <div class="pay-info"><h4>WhatsApp Order</h4><p>Pay on delivery or via M-Pesa Â· Our team calls you</p></div>
+          <div class="pay-info"><h4>WhatsApp Order</h4><p>Pay on delivery or via M-Pesa · Our team calls you</p></div>
         </div>
       </div>
       <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:18px;font-size:12.5px;color:var(--text3);">
         <strong style="color:var(--text2);">Order for:</strong> ${ckData.name||ckData.email}<br/>
-        <strong style="color:var(--text2);">Deliver to:</strong> ${ckData.deliveryZone ? ckData.deliveryZone.split('|')[0] : 'N/A'} Â· ${deliveryDays}
+        <strong style="color:var(--text2);">Deliver to:</strong> ${ckData.deliveryZone ? ckData.deliveryZone.split('|')[0] : 'N/A'} · ${deliveryDays}
       </div>
       <div class="ck-nav-row">
         <button class="btn-cta outline" style="width:auto;padding:11px 20px;" onclick="ckBack()">
@@ -1533,12 +1533,12 @@ function renderCkSummary() {
     ${cart.map(i=>`
       <div class="ck-item">
         <div class="ck-item-img">${i.image?`<img src="${i.image}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`:catIcon(i.category)}</div>
-        <div class="ck-item-info"><div class="ck-item-name">${i.name}</div><div class="ck-item-meta">${i.brand}${i.variant?' Â· '+i.variant:''} Ã— ${i.qty}</div></div>
+        <div class="ck-item-info"><div class="ck-item-name">${i.name}</div><div class="ck-item-meta">${i.brand}${i.variant?' · '+i.variant:''} × ${i.qty}</div></div>
         <div class="ck-item-price">KES ${(i.price*i.qty).toLocaleString()}</div>
       </div>`).join('')}
     <div class="ck-totals">
       <div class="ck-tot-row"><span>Subtotal</span><span>KES ${cartTotal().toLocaleString()}</span></div>
-      <div class="ck-tot-row"><span>Delivery${ckData.deliveryZone?' ('+ckData.deliveryZone.split('|')[0]+')':''}</span><span>${deliveryFee > 0 ? 'KES '+deliveryFee.toLocaleString() : 'â€”'}</span></div>
+      <div class="ck-tot-row"><span>Delivery${ckData.deliveryZone?' ('+ckData.deliveryZone.split('|')[0]+')':''}</span><span>${deliveryFee > 0 ? 'KES '+deliveryFee.toLocaleString() : '—'}</span></div>
       <div class="ck-tot-row grand"><span>Total</span><span class="ck-amount">KES ${total.toLocaleString()}</span></div>
     </div>
     <div class="ck-help-box">
@@ -1571,7 +1571,7 @@ function updateDeliveryFee(val) {
   deliveryFee = parseInt(parts[1]);
   deliveryDays = parts[2] || '';
   ckData.deliveryZone = val;
-  if (info) { info.style.display='flex'; txt.textContent = `Delivery to ${parts[0]}: KES ${parseInt(parts[1]).toLocaleString()} Â· ${parts[2]}`; }
+  if (info) { info.style.display='flex'; txt.textContent = `Delivery to ${parts[0]}: KES ${parseInt(parts[1]).toLocaleString()} · ${parts[2]}`; }
   renderCkSummary();
 }
 
@@ -1629,7 +1629,7 @@ async function processPayment() {
   const total = cartTotal() + deliveryFee;
   const orderNum = 'LTL-' + Date.now().toString(36).toUpperCase().slice(-8);
   if (payMethod === 'whatsapp') {
-    const itemsTxt = cart.map(i=>`â€¢ ${i.name}${i.variant?' ('+i.variant+')':''} Ã—${i.qty} â€” KES ${(i.price*i.qty).toLocaleString()}`).join('\n');
+    const itemsTxt = cart.map(i=>`• ${i.name}${i.variant?' ('+i.variant+')':''} ×${i.qty} — KES ${(i.price*i.qty).toLocaleString()}`).join('\n');
     const msg = encodeURIComponent(`*Order #${orderNum}*\n\n*Customer:* ${ckData.name||'N/A'}\n*Email:* ${ckData.email}\n*Phone:* ${ckData.phone||'N/A'}\n*Deliver to:* ${ckData.deliveryZone?ckData.deliveryZone.split('|')[0]:''}\n*Address:* ${ckData.address||'TBD'}\n\n*Items:*\n${itemsTxt}\n\n*Subtotal:* KES ${cartTotal().toLocaleString()}\n*Delivery:* KES ${deliveryFee.toLocaleString()}\n*TOTAL: KES ${total.toLocaleString()}*`);
     await saveOrder(orderNum, 'whatsapp', 'pending', total, null);
     window.open(getWhatsAppLink(msg), '_blank');
@@ -1866,7 +1866,7 @@ function updateAdminStats() {
 function updateTopbarStats() {
   const lo = JSON.parse(localStorage.getItem('ltl2_orders')||'[]');
   document.getElementById('topbarNum').textContent = lo.length;
-  document.getElementById('topbarSub').textContent = lo.length === 1 ? 'Order Â· All time' : 'Orders Â· All time';
+  document.getElementById('topbarSub').textContent = lo.length === 1 ? 'Order · All time' : 'Orders · All time';
 }
 
 function renderAdminProducts() {
@@ -1910,8 +1910,8 @@ function renderOrdersTable() {
   tbody.innerHTML = allOrders.map(o => `
     <tr>
       <td style="font-family:var(--font-m);color:var(--primary);font-size:12px">${o.order_number}</td>
-      <td>${o.customer_name||o.customer_email||'â€”'}</td>
-      <td style="font-size:12px">${o.delivery_area||'â€”'}</td>
+      <td>${o.customer_name||o.customer_email||'—'}</td>
+      <td style="font-size:12px">${o.delivery_area||'—'}</td>
       <td style="font-family:var(--font-m)">${Number(o.total||0).toLocaleString()}</td>
       <td><span class="pill ${o.payment_status==='paid'?'paid':'pending'}">${o.payment_status}</span></td>
       <td><span class="pill ${o.order_status==='confirmed'?'active':o.order_status==='shipped'?'shipped':'pending'}">${o.order_status||'confirmed'}</span></td>
@@ -2290,11 +2290,11 @@ function toggleTheme() {
   const label = document.getElementById('themeLabel');
   if (newTheme === 'dark') {
     track.classList.add('on');
-    icon.textContent = 'â˜€ï¸';
+    icon.textContent = '☀️';
     label.textContent = 'Light Mode';
   } else {
     track.classList.remove('on');
-    icon.textContent = 'ðŸŒ™';
+    icon.textContent = '🌙';
     label.textContent = 'Dark Mode';
   }
 }
@@ -2307,7 +2307,7 @@ function toggleTheme() {
       const track = document.getElementById('tsTrack');
       if (track) { track.classList.add('on'); }
       const icon = document.getElementById('themeIcon');
-      if (icon) { icon.textContent = 'â˜€ï¸'; }
+      if (icon) { icon.textContent = '☀️'; }
       const label = document.getElementById('themeLabel');
       if (label) { label.textContent = 'Light Mode'; }
     }, 50);
@@ -2790,3 +2790,4 @@ function focusGalleryImageInput() {
 function focusImgInput() {
   focusGalleryImageInput();
 }
+
