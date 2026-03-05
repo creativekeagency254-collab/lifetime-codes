@@ -7,7 +7,6 @@ const CFG = {
   SUPABASE_PUBLISHABLE: 'sb_publishable_h5pygvIpbj6JaQwCiAnMSw_0MXm8Z7Q',
   SUPABASE_ANON:    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZidWxpdGZ5YXJtbnllZ3hkdXF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjE5MDAsImV4cCI6MjA4Nzc5NzkwMH0.K5UwbTYttPQeK4DTx1AO_CzPWg6IuOx4_zTbQcYEWts',
   PAYSTACK_PK:      'pk_test_69283fe06fedab5b485efdae233a92be25d77c6b',
-  PAYSTACK_SK:      'sk_test_fd736a649e04cd256f6328ac8b45aa007e87b99f',
   WHATSAPP:         '0705925800',
   ADMIN_EMAIL:      'admin@gmail.com',
   ADMIN_PASS:       'Mmm@29315122',
@@ -131,9 +130,16 @@ function escapeHtml(value) {
 // ============================================================
 // SUPABASE CLIENT
 // ============================================================
-const { createClient } = supabase;
-const sbKey = CFG.SUPABASE_PUBLISHABLE || CFG.SUPABASE_ANON;
-const sb = (CFG.ENABLE_SUPABASE && CFG.SUPABASE_URL && sbKey) ? createClient(CFG.SUPABASE_URL, sbKey) : null;
+const createClient = (typeof window !== 'undefined' && window.supabase && typeof window.supabase.createClient === 'function')
+  ? window.supabase.createClient
+  : null;
+const sbUrl = String(CFG.SUPABASE_URL || '').trim();
+const sbKey = String(CFG.SUPABASE_PUBLISHABLE || CFG.SUPABASE_ANON || '').trim();
+const sb = (CFG.ENABLE_SUPABASE && createClient && sbUrl && sbKey)
+  ? createClient(sbUrl, sbKey, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    })
+  : null;
 // Never use Supabase service-role/secret keys in browser code.
 const sbAdmin = sb;
 
@@ -149,6 +155,13 @@ const FALLBACK_PRODUCTS = [
   {id:'f6',name:'Galaxy Tab S9 Ultra',slug:'galaxy-tab-s9-ultra',category:'tablets',brand:'Samsung',price:149999,original_price:169999,stock:7,description:'14.6" Dynamic AMOLED 2X. S Pen included. IP68 rated.',specs:{Display:'14.6" Dynamic AMOLED 2X',Processor:'Snapdragon 8 Gen 2',RAM:'12GB',Storage:'256GB',Battery:'11200mAh'},variants:['Graphite','Cream'],badge:'Sale',active:true,images:[]},
   {id:'f7',name:'Dell XPS 15 2024',slug:'dell-xps-15',category:'laptops',brand:'Dell',price:259999,original_price:null,stock:4,description:'Intel Core Ultra 7, 3.5K OLED, RTX 4060. The professional\'s choice.',specs:{Display:'15.6" OLED 3.5K',Processor:'Intel Core Ultra 7',RAM:'32GB',GPU:'RTX 4060 8GB',Storage:'1TB SSD'},variants:['Platinum Silver'],badge:null,active:true,images:[]},
   {id:'f8',name:'Garmin Fenix 7X Pro Solar',slug:'garmin-fenix-7x',category:'watches',brand:'Garmin',price:89999,original_price:99999,stock:9,description:'37-day battery with solar. Multi-band GPS. Built for adventure.',specs:{Case:'51mm Titanium Solar',Battery:'37 days',GPS:'Multi-band GNSS',Water:'100m MIL-STD'},variants:['Carbon Gray','Mineral Blue'],badge:null,active:true,images:[]},
+  {id:'f9',name:'Philips Essential Airfryer 6.2L',slug:'philips-airfryer-6l',category:'kitchen-accessories',brand:'Philips',price:32999,original_price:36999,stock:11,description:'Rapid Air technology for crispy cooking with less oil. Family-size basket.',specs:{Capacity:'6.2L',Power:'1700W',Programs:'12 presets',Warranty:'1 year'},variants:['Black'],badge:'Hot',active:true,images:[]},
+  {id:'f10',name:'PlayStation 5 Slim Bundle',slug:'ps5-slim-bundle',category:'gaming',brand:'Sony',price:87999,original_price:94999,stock:6,description:'Next-gen console performance with ultra-fast SSD and 4K gaming.',specs:{Storage:'1TB SSD',Video:'4K 120Hz',Controller:'DualSense',Edition:'Disc'},variants:['Standard Bundle'],badge:'Sale',active:true,images:[]},
+  {id:'f11',name:'Google Nest Hub 2nd Gen',slug:'nest-hub-2nd-gen',category:'smart-home',brand:'Google',price:18999,original_price:null,stock:14,description:'Smart home display for voice control, routines and media in every room.',specs:{Display:'7-inch touch',Assistant:'Google Assistant',Audio:'Full-range speaker',Connectivity:'Wi-Fi, Bluetooth'},variants:['Chalk','Charcoal'],badge:'New',active:true,images:[]},
+  {id:'f12',name:'Gold Layered Necklace Set',slug:'gold-layered-necklace-set',category:'jewelry-necklaces',brand:'LTL Jewelry',price:4999,original_price:6500,stock:24,description:'Elegant layered necklace set for daily wear and occasion styling.',specs:{Material:'Gold-plated alloy',Pieces:'3',Finish:'Polished',Closure:'Lobster clasp'},variants:['Classic Gold'],badge:'Hot',active:true,images:[]},
+  {id:'f13',name:'Sterling Silver Ring',slug:'sterling-silver-ring',category:'jewelry-rings',brand:'LTL Jewelry',price:3999,original_price:null,stock:18,description:'Minimal sterling silver ring with comfortable fit and timeless look.',specs:{Material:'925 Sterling Silver',Size:'Adjustable',Weight:'Lightweight',Finish:'Matte'},variants:['Silver'],badge:'New',active:true,images:[]},
+  {id:'f14',name:'Crystal Charm Bracelet',slug:'crystal-charm-bracelet',category:'jewelry-bracelets',brand:'LTL Jewelry',price:4599,original_price:5200,stock:21,description:'Adjustable crystal charm bracelet designed for gift-ready elegance.',specs:{Material:'Alloy + crystals',Length:'Adjustable',Closure:'Slide lock',Style:'Charm'},variants:['Rose Gold','Silver'],badge:null,active:true,images:[]},
+  {id:'f15',name:'Classic Jewelry Watch',slug:'classic-jewelry-watch',category:'jewelry-watches',brand:'LTL Jewelry',price:8999,original_price:10500,stock:13,description:'Fashion jewelry watch with slim dial and premium strap finish.',specs:{Dial:'34mm',Strap:'Stainless steel',Water:'3ATM',Battery:'Quartz'},variants:['Gold','Silver'],badge:'Sale',active:true,images:[]},
 ];
 
 const DELIVERY_ZONES = [
@@ -211,10 +224,128 @@ let deliveryFee = 0;
 let deliveryDays = '';
 let payMethod = 'paystack';
 let dbOnline = false;
+let storefrontMode = 'electronics';
+let adminCatalogMode = 'electronics';
+let currentPage = 'explore';
+let activeSearchQuery = '';
+let displayedProducts = [];
+let likedViewActive = false;
 let brandingState = {
   preset: DEFAULT_BRANDING_STATE.preset,
   additions: { ...DEFAULT_BRANDING_STATE.additions },
 };
+
+function setDbStatus(label, color) {
+  const el = document.getElementById('aStatDb');
+  if (!el) return;
+  el.textContent = label;
+  if (color) el.style.color = color;
+}
+
+function canUseSupabase() {
+  return !!(CFG.ENABLE_SUPABASE && sb);
+}
+
+function isTransientDbError(error) {
+  const status = Number(error?.status || error?.code || 0);
+  if (status === 408 || status === 425 || status === 429) return true;
+  if (status >= 500 && status <= 599) return true;
+  const msg = String(error?.message || error || '').toLowerCase();
+  return (
+    msg.includes('network') ||
+    msg.includes('fetch') ||
+    msg.includes('timeout') ||
+    msg.includes('failed to fetch') ||
+    msg.includes('temporar')
+  );
+}
+
+function isSchemaMissingError(error) {
+  const code = String(error?.code || '').toUpperCase();
+  const msg = String(error?.message || '').toLowerCase();
+  return code === 'PGRST205' || msg.includes('could not find the table');
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function runDbWithRetry(factoryFn, options = {}) {
+  const retries = Number.isInteger(options.retries) ? options.retries : 2;
+  const baseDelayMs = options.baseDelayMs || 300;
+  let lastError = null;
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      const result = await factoryFn();
+      if (result?.error) throw result.error;
+      return result;
+    } catch (error) {
+      lastError = error;
+      const retryable = isTransientDbError(error);
+      if (!retryable || attempt === retries) break;
+      await wait(baseDelayMs * (attempt + 1));
+    }
+  }
+  throw lastError || new Error('Unknown database error');
+}
+
+async function fetchProductsFromSupabase() {
+  const tries = [
+    () => sb.from('products').select('*').eq('active', true).order('created_at', { ascending: false }),
+    () => sb.from('products').select('*').eq('active', true).order('id', { ascending: false }),
+    () => sb.from('products').select('*').eq('active', true),
+  ];
+  let lastError = null;
+  for (const query of tries) {
+    try {
+      const { data } = await runDbWithRetry(query, { retries: 1 });
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError || new Error('Could not load products from Supabase');
+}
+
+async function fetchOrdersFromSupabase() {
+  const tries = [
+    () => sbAdmin.from('orders').select('*').order('created_at', { ascending: false }).limit(50),
+    () => sbAdmin.from('orders').select('*').limit(50),
+  ];
+  let lastError = null;
+  for (const query of tries) {
+    try {
+      const { data } = await runDbWithRetry(query, { retries: 1 });
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError || new Error('Could not load orders from Supabase');
+}
+
+async function runSupabaseWrite(factoryFn, options = {}) {
+  const { silent = false, fallbackNotice = 'Saved locally only. Supabase sync failed.' } = options;
+  if (!canUseSupabase()) return false;
+  try {
+    await runDbWithRetry(factoryFn, { retries: 1, baseDelayMs: 250 });
+    setDbStatus('Connected', 'var(--green)');
+    dbOnline = true;
+    return true;
+  } catch (error) {
+    console.warn('Supabase write failed:', error?.message || error);
+    const schemaMissing = isSchemaMissingError(error);
+    setDbStatus(schemaMissing ? 'Schema Missing' : 'Sync Issue', schemaMissing ? 'var(--red)' : 'var(--amber)');
+    dbOnline = false;
+    if (!silent) {
+      const message = schemaMissing
+        ? 'Run supabase-schema.sql in Supabase SQL Editor, then refresh.'
+        : fallbackNotice;
+      toast('inf', schemaMissing ? 'Supabase Schema Missing' : 'Supabase Sync Issue', message);
+    }
+    return false;
+  }
+}
 
 // ============================================================
 // ICONS
@@ -226,12 +357,39 @@ function catIcon(cat) {
     watches:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><polyline points="12 9 12 12 13.5 13.5"/></svg>`,
     audio:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>`,
     tablets:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>`,
+    'kitchen-accessories':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a3 3 0 0 0 6 0V3"/><line x1="9" y1="3" x2="9" y2="10"/><path d="M14 3h1a3 3 0 0 1 3 3v15"/><line x1="4" y1="21" x2="20" y2="21"/></svg>`,
+    gaming:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h4"/><path d="M8 10v4"/><path d="M15 13h.01"/><path d="M18 11h.01"/><path d="M7 6h10a4 4 0 0 1 3.9 4.9l-1.1 5a3 3 0 0 1-2.93 2.35h-1.2a2 2 0 0 1-1.79-1.1l-.56-1.13a2 2 0 0 0-1.79-1.1h-.06a2 2 0 0 0-1.79 1.1l-.56 1.12a2 2 0 0 1-1.79 1.11h-1.2a3 3 0 0 1-2.93-2.34l-1.1-5A4 4 0 0 1 7 6z"/></svg>`,
+    'smart-home':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.8V21h14V9.8"/><path d="M9 21v-5a3 3 0 0 1 6 0v5"/></svg>`,
+    'jewelry-necklaces':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5a5 5 0 0 1 10 0v4a5 5 0 0 1-10 0z"/><circle cx="12" cy="19" r="3"/></svg>`,
+    'jewelry-rings':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="16" r="5"/><circle cx="16" cy="16" r="5"/></svg>`,
+    'jewelry-bracelets':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/></svg>`,
+    'jewelry-earrings':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7a4 4 0 0 1 8 0v4a4 4 0 0 1-8 0z"/><circle cx="9" cy="19" r="2"/><circle cx="15" cy="19" r="2"/></svg>`,
+    'jewelry-watches':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><rect x="9" y="18" width="6" height="4" rx="1"/><circle cx="12" cy="12" r="5"/><polyline points="12 10 12 12 13.5 13.5"/></svg>`,
     jewerlys:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 20.5 9 12 22 3.5 9 12 2"/><path d="M3.5 9h17"/></svg>`,
   };
   return m[cat] || `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
 }
 
-const DEFAULT_CATEGORIES = ['smartphones', 'laptops', 'watches', 'audio', 'tablets', 'accessories'];
+const DEFAULT_ELECTRONICS_CATEGORIES = [
+  'smartphones',
+  'laptops',
+  'watches',
+  'audio',
+  'tablets',
+  'kitchen-accessories',
+  'gaming',
+  'smart-home',
+  'accessories',
+];
+const DEFAULT_JEWELRY_CATEGORIES = [
+  'jewerlys',
+  'jewelry-necklaces',
+  'jewelry-rings',
+  'jewelry-bracelets',
+  'jewelry-earrings',
+  'jewelry-watches',
+];
+const DEFAULT_CATEGORIES = [...DEFAULT_ELECTRONICS_CATEGORIES, ...DEFAULT_JEWELRY_CATEGORIES];
 const CATEGORY_TITLE_MAP = {
   all: 'All Products',
   smartphones: 'Smartphones',
@@ -239,8 +397,16 @@ const CATEGORY_TITLE_MAP = {
   watches: 'Watches & Wearables',
   audio: 'Audio',
   tablets: 'Tablets',
+  'kitchen-accessories': 'Kitchen Accessories',
+  gaming: 'Gaming Gear',
+  'smart-home': 'Smart Home',
   accessories: 'Accessories',
   jewerlys: 'Jewerlys',
+  'jewelry-necklaces': 'Necklaces',
+  'jewelry-rings': 'Rings',
+  'jewelry-bracelets': 'Bracelets',
+  'jewelry-earrings': 'Earrings',
+  'jewelry-watches': 'Jewelry Watches',
 };
 const CATEGORY_CARD_LABEL_MAP = {
   smartphones: 'Smartphone',
@@ -248,10 +414,98 @@ const CATEGORY_CARD_LABEL_MAP = {
   watches: 'Watch',
   audio: 'Audio',
   tablets: 'Tablet',
+  'kitchen-accessories': 'Kitchen',
+  gaming: 'Gaming',
+  'smart-home': 'Smart Home',
   accessories: 'Accessory',
   jewerlys: 'Jewelry',
+  'jewelry-necklaces': 'Necklace',
+  'jewelry-rings': 'Ring',
+  'jewelry-bracelets': 'Bracelet',
+  'jewelry-earrings': 'Earrings',
+  'jewelry-watches': 'Jewelry Watch',
 };
-const HEADER_TOGGLE_CATEGORIES = ['jewerlys'];
+const HEADER_TOGGLE_CATEGORIES = [...DEFAULT_JEWELRY_CATEGORIES];
+const SEO_BASE_URL = 'https://lifetimetechnology.store';
+const SEO_SITE_NAME = 'Life Time Technology Store';
+const SEO_DEFAULT_IMAGE = `${SEO_BASE_URL}/assets/images/logo-original.png`;
+const CATEGORY_SEO_COPY = {
+  all: {
+    title: 'Premium Electronics in Kenya',
+    description: 'Shop smartphones, laptops, watches, audio devices, tablets and smart home electronics with secure checkout in Kenya.',
+    keywords: 'electronics Kenya, phones Kenya, laptops Kenya, gadgets Kenya',
+  },
+  smartphones: {
+    title: 'Smartphones in Kenya',
+    description: 'Buy premium smartphones in Kenya from Samsung, Apple and top brands with trusted delivery.',
+    keywords: 'smartphones Kenya, iPhone Kenya, Samsung Kenya',
+  },
+  laptops: {
+    title: 'Laptops and Computers',
+    description: 'Shop performance laptops and notebooks in Kenya for business, school and gaming.',
+    keywords: 'laptops Kenya, notebooks Kenya, MacBook Kenya, Dell XPS Kenya',
+  },
+  watches: {
+    title: 'Smart Watches and Wearables',
+    description: 'Discover smart watches and wearables with fitness tracking, GPS and long battery life.',
+    keywords: 'smart watches Kenya, wearables Kenya, Apple Watch Kenya, Garmin Kenya',
+  },
+  audio: {
+    title: 'Audio Devices and Headphones',
+    description: 'Shop headphones, earbuds and audio accessories with clear sound and reliable connectivity.',
+    keywords: 'audio Kenya, headphones Kenya, earbuds Kenya',
+  },
+  tablets: {
+    title: 'Tablets in Kenya',
+    description: 'Browse powerful tablets for work, entertainment and school with fast delivery options.',
+    keywords: 'tablets Kenya, iPad Kenya, Galaxy Tab Kenya',
+  },
+  'kitchen-accessories': {
+    title: 'Kitchen Accessories and Appliances',
+    description: 'Find quality kitchen accessories and smart appliances for everyday cooking and convenience.',
+    keywords: 'kitchen accessories Kenya, air fryer Kenya, kitchen appliances Kenya',
+  },
+  gaming: {
+    title: 'Gaming Consoles and Accessories',
+    description: 'Shop gaming consoles, controllers and accessories built for high performance play.',
+    keywords: 'gaming Kenya, PlayStation Kenya, gaming accessories Kenya',
+  },
+  'smart-home': {
+    title: 'Smart Home Devices',
+    description: 'Upgrade your home with smart displays, voice assistants and connected home electronics.',
+    keywords: 'smart home Kenya, smart display Kenya, home automation Kenya',
+  },
+  jewerlys: {
+    title: 'Jewelry Collection',
+    description: 'Explore stylish jewelry pieces including necklaces, rings, bracelets, earrings and watches.',
+    keywords: 'jewelry Kenya, necklaces Kenya, rings Kenya, bracelets Kenya',
+  },
+  'jewelry-necklaces': {
+    title: 'Necklaces Collection',
+    description: 'Shop elegant necklace designs for daily wear, events and gifting.',
+    keywords: 'necklaces Kenya, jewelry necklaces Kenya',
+  },
+  'jewelry-rings': {
+    title: 'Rings Collection',
+    description: 'Discover minimalist and statement rings crafted for style and comfort.',
+    keywords: 'rings Kenya, jewelry rings Kenya',
+  },
+  'jewelry-bracelets': {
+    title: 'Bracelets Collection',
+    description: 'Browse adjustable and charm bracelets designed for gifting and daily wear.',
+    keywords: 'bracelets Kenya, jewelry bracelets Kenya',
+  },
+  'jewelry-earrings': {
+    title: 'Earrings Collection',
+    description: 'Find elegant earrings that pair with modern and classic looks.',
+    keywords: 'earrings Kenya, jewelry earrings Kenya',
+  },
+  'jewelry-watches': {
+    title: 'Jewelry Watches',
+    description: 'Shop jewelry watches that blend fashion styling with everyday practicality.',
+    keywords: 'jewelry watches Kenya, fashion watches Kenya',
+  },
+};
 
 function normalizeCategoryValue(value) {
   return String(value || '')
@@ -280,10 +534,22 @@ function cardCategoryLabel(cat) {
   return CATEGORY_CARD_LABEL_MAP[slug] || categoryDisplayName(slug);
 }
 
-function getAvailableCategories() {
+function isJewelryCategory(cat) {
+  const slug = normalizeCategoryValue(cat);
+  return DEFAULT_JEWELRY_CATEGORIES.includes(slug);
+}
+
+function getAllKnownCategories() {
   const dynamic = new Set(products.map((p) => normalizeCategoryValue(p.category)).filter(Boolean));
-  const defaults = DEFAULT_CATEGORIES.filter((c) => dynamic.has(c));
-  const extras = [...dynamic].filter((c) => !DEFAULT_CATEGORIES.includes(c)).sort();
+  return [...new Set([...DEFAULT_CATEGORIES, ...dynamic])];
+}
+
+function getAvailableCategories(mode = storefrontMode) {
+  const all = getAllKnownCategories();
+  const isJewelryMode = mode === 'jewerlys';
+  const defaults = isJewelryMode ? DEFAULT_JEWELRY_CATEGORIES : DEFAULT_ELECTRONICS_CATEGORIES;
+  const scoped = all.filter((cat) => (isJewelryMode ? isJewelryCategory(cat) : !isJewelryCategory(cat)));
+  const extras = scoped.filter((cat) => !defaults.includes(cat)).sort((a, b) => a.localeCompare(b));
   return [...defaults, ...extras];
 }
 
@@ -292,7 +558,7 @@ function getAvailableBrands() {
 }
 
 function getAllowedFilterCategories() {
-  return ['all', ...new Set([...getAvailableCategories(), ...HEADER_TOGGLE_CATEGORIES])];
+  return ['all', ...new Set([...getAllKnownCategories(), ...HEADER_TOGGLE_CATEGORIES])];
 }
 
 function getCategoryFromUrl() {
@@ -313,26 +579,339 @@ function getSearchQueryFromUrl() {
   }
 }
 
+function getProductSlugFromUrl() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return String(params.get('product') || '').trim().toLowerCase();
+  } catch (_) {
+    return '';
+  }
+}
+
+function prefersReducedMotion() {
+  return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
+function updateHeadMeta(id, value) {
+  const el = document.getElementById(id);
+  if (!el || !value) return;
+  el.setAttribute('content', value);
+}
+
+function updateLinkHref(id, value) {
+  const el = document.getElementById(id);
+  if (!el || !value) return;
+  el.setAttribute('href', value);
+}
+
+function setSeoTitle(text) {
+  if (!text) return;
+  document.title = text;
+  const t = document.getElementById('seoTitle');
+  if (t) t.textContent = text;
+}
+
+function buildCanonical(params = {}) {
+  const url = new URL(SEO_BASE_URL);
+  const category = normalizeCategoryValue(params.category || '');
+  const query = String(params.query || '').trim();
+  const product = String(params.product || '').trim();
+  if (category && category !== 'all') url.searchParams.set('category', category);
+  if (query) url.searchParams.set('q', query);
+  if (product) url.searchParams.set('product', product);
+  return url.toString();
+}
+
+function syncSearchInUrl(query) {
+  if (!window.history || typeof window.history.replaceState !== 'function') return;
+  const clean = String(query || '').trim();
+  const url = new URL(window.location.href);
+  if (clean) url.searchParams.set('q', clean);
+  else url.searchParams.delete('q');
+  if (!clean) url.searchParams.delete('product');
+  window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+}
+
+function syncProductInUrl(productSlug) {
+  if (!window.history || typeof window.history.replaceState !== 'function') return;
+  const clean = String(productSlug || '').trim();
+  const url = new URL(window.location.href);
+  if (clean) url.searchParams.set('product', clean);
+  else url.searchParams.delete('product');
+  if (clean) url.searchParams.delete('q');
+  window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+}
+
+function ensureActiveChipVisible() {
+  const wrap = document.getElementById('catChips');
+  const active = wrap?.querySelector('.cat-chip.active');
+  if (!wrap || !active) return;
+  if (window.innerWidth > 900) return;
+  const opts = { block: 'nearest', inline: 'center', behavior: prefersReducedMotion() ? 'auto' : 'smooth' };
+  active.scrollIntoView(opts);
+}
+
+function buildProductOfferSchema(product, canonicalUrl) {
+  const stock = Number(product?.stock || 0);
+  return {
+    '@type': 'Offer',
+    priceCurrency: 'KES',
+    price: Number(product?.price || 0),
+    availability: stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+    itemCondition: 'https://schema.org/NewCondition',
+    url: canonicalUrl,
+  };
+}
+
+function getCurrentSeoCategory() {
+  const normalized = normalizeCategoryValue(currentCat);
+  if (normalized) return normalized;
+  return storefrontMode === 'jewerlys' ? 'jewerlys' : 'all';
+}
+
+function getCategorySeoPayload(cat) {
+  const slug = normalizeCategoryValue(cat) || 'all';
+  const fallbackKey = storefrontMode === 'jewerlys' ? 'jewerlys' : 'all';
+  const copy = CATEGORY_SEO_COPY[slug] || CATEGORY_SEO_COPY[fallbackKey] || CATEGORY_SEO_COPY.all;
+  return {
+    slug,
+    title: copy.title,
+    description: copy.description,
+    keywords: copy.keywords,
+  };
+}
+
+function getSearchResultsForSchema() {
+  if (!Array.isArray(displayedProducts)) return [];
+  return displayedProducts.filter((p) => p && p.active !== false).slice(0, 12);
+}
+
+function buildDynamicSchema(context) {
+  const canonicalUrl = context.canonical;
+  if (context.type === 'product' && context.product) {
+    const product = context.product;
+    const images = Array.isArray(product.images) ? product.images.filter(Boolean) : [];
+    return {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'Product',
+          name: product.name,
+          description: product.description || `${product.name} by ${product.brand}`,
+          category: categoryDisplayName(product.category),
+          sku: product.sku || undefined,
+          brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
+          image: images.length ? images : [SEO_DEFAULT_IMAGE],
+          offers: buildProductOfferSchema(product, canonicalUrl),
+          url: canonicalUrl,
+        },
+        {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: SEO_BASE_URL },
+            { '@type': 'ListItem', position: 2, name: categoryTitle(product.category), item: buildCanonical({ category: product.category }) },
+            { '@type': 'ListItem', position: 3, name: product.name, item: canonicalUrl },
+          ],
+        },
+      ],
+    };
+  }
+
+  const items = getSearchResultsForSchema();
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'CollectionPage',
+        name: context.heading,
+        description: context.description,
+        url: canonicalUrl,
+        isPartOf: { '@id': `${SEO_BASE_URL}/#website` },
+      },
+      {
+        '@type': 'ItemList',
+        name: `${context.heading} Product List`,
+        itemListOrder: 'https://schema.org/ItemListOrderAscending',
+        numberOfItems: items.length,
+        itemListElement: items.map((p, idx) => {
+          const slug = String(p.slug || p.id || '').trim();
+          return {
+            '@type': 'ListItem',
+            position: idx + 1,
+            name: p.name,
+            url: buildCanonical({ category: p.category, product: slug }),
+            item: {
+              '@type': 'Product',
+              name: p.name,
+              brand: p.brand ? { '@type': 'Brand', name: p.brand } : undefined,
+              category: categoryDisplayName(p.category),
+              image: Array.isArray(p.images) && p.images.length ? p.images[0] : SEO_DEFAULT_IMAGE,
+              offers: buildProductOfferSchema(p, buildCanonical({ category: p.category, product: slug })),
+            },
+          };
+        }),
+      },
+      {
+        '@type': 'FAQPage',
+        mainEntity: [
+          {
+            '@type': 'Question',
+            name: 'How fast is delivery in Kenya?',
+            acceptedAnswer: { '@type': 'Answer', text: 'Delivery timelines depend on location. Nairobi areas can be same-day or 1-2 days, while upcountry deliveries are usually 2-5 days.' },
+          },
+          {
+            '@type': 'Question',
+            name: 'Can I order through WhatsApp?',
+            acceptedAnswer: { '@type': 'Answer', text: 'Yes. You can order via checkout or use WhatsApp support for assisted ordering.' },
+          },
+        ],
+      },
+    ],
+  };
+}
+
+function updateDynamicSeo(context) {
+  if (!context) return;
+  setSeoTitle(context.title);
+  updateHeadMeta('seoDescription', context.description);
+  updateHeadMeta('seoKeywords', context.keywords);
+  updateHeadMeta('seoOgTitle', context.title);
+  updateHeadMeta('seoOgDescription', context.description);
+  updateHeadMeta('seoOgUrl', context.canonical);
+  updateHeadMeta('seoOgImage', context.image || SEO_DEFAULT_IMAGE);
+  updateHeadMeta('seoOgImageAlt', context.imageAlt || context.heading || SEO_SITE_NAME);
+  updateHeadMeta('seoTwitterTitle', context.title);
+  updateHeadMeta('seoTwitterDescription', context.description);
+  updateHeadMeta('seoTwitterImage', context.image || SEO_DEFAULT_IMAGE);
+  updateLinkHref('seoCanonical', context.canonical);
+
+  const schemaEl = document.getElementById('dynamic-seo-schema');
+  if (schemaEl) schemaEl.textContent = JSON.stringify(buildDynamicSchema(context));
+}
+
+function updateSeoForCurrentView() {
+  const page = currentPage || 'explore';
+  if (page === 'detail' && currentProduct) {
+    const productSlug = String(currentProduct.slug || currentProduct.id || '').trim();
+    const canonical = buildCanonical({ category: currentProduct.category, product: productSlug });
+    const title = `${currentProduct.name} | ${SEO_SITE_NAME}`;
+    const description = currentProduct.description
+      ? `${currentProduct.description} Price: KES ${Number(currentProduct.price || 0).toLocaleString()}.`
+      : `${currentProduct.name} by ${currentProduct.brand}. Shop now at ${SEO_SITE_NAME}.`;
+    updateDynamicSeo({
+      type: 'product',
+      title,
+      heading: currentProduct.name,
+      description,
+      keywords: `${currentProduct.name}, ${currentProduct.brand}, ${categoryDisplayName(currentProduct.category)}, Kenya`,
+      canonical,
+      image: Array.isArray(currentProduct.images) && currentProduct.images.length ? currentProduct.images[0] : SEO_DEFAULT_IMAGE,
+      imageAlt: currentProduct.name,
+      product: currentProduct,
+    });
+    return;
+  }
+
+  if (page === 'checkout') {
+    const canonical = buildCanonical({ category: getCurrentSeoCategory() });
+    updateDynamicSeo({
+      type: 'collection',
+      title: `Secure Checkout | ${SEO_SITE_NAME}`,
+      heading: 'Checkout',
+      description: 'Complete your order with secure payment and fast delivery options in Kenya.',
+      keywords: 'checkout Kenya, secure payment Kenya, electronics checkout',
+      canonical,
+      image: SEO_DEFAULT_IMAGE,
+      imageAlt: 'Secure checkout',
+    });
+    return;
+  }
+
+  if (likedViewActive) {
+    const canonical = buildCanonical({ category: getCurrentSeoCategory() });
+    updateDynamicSeo({
+      type: 'collection',
+      title: `Liked Products | ${SEO_SITE_NAME}`,
+      heading: 'Liked Products',
+      description: 'Review your liked products and continue shopping from your saved picks.',
+      keywords: 'liked products, wishlist products, favorites',
+      canonical,
+      image: SEO_DEFAULT_IMAGE,
+      imageAlt: 'Liked products',
+    });
+    return;
+  }
+
+  const cat = getCurrentSeoCategory();
+  const catSeo = getCategorySeoPayload(cat);
+  const cleanSearch = String(activeSearchQuery || '').trim();
+  const canonical = buildCanonical({ category: cat, query: cleanSearch });
+  if (cleanSearch) {
+    updateDynamicSeo({
+      type: 'collection',
+      title: `"${cleanSearch}" Results | ${SEO_SITE_NAME}`,
+      heading: `Search: ${cleanSearch}`,
+      description: `Search results for "${cleanSearch}" in ${categoryTitle(cat)}. Compare products, prices and features quickly.`,
+      keywords: `${cleanSearch}, product search Kenya, ${catSeo.keywords}`,
+      canonical,
+      image: SEO_DEFAULT_IMAGE,
+      imageAlt: `Search results for ${cleanSearch}`,
+    });
+    return;
+  }
+
+  updateDynamicSeo({
+    type: 'collection',
+    title: `${catSeo.title} | ${SEO_SITE_NAME}`,
+    heading: categoryTitle(cat),
+    description: catSeo.description,
+    keywords: `${catSeo.keywords}, ${SEO_SITE_NAME}`,
+    canonical,
+    image: SEO_DEFAULT_IMAGE,
+    imageAlt: categoryTitle(cat),
+  });
+}
+
 function syncCategoryInUrl(cat) {
   if (!window.history || typeof window.history.replaceState !== 'function') return;
   const normalized = normalizeCategoryValue(cat) || 'all';
   const url = new URL(window.location.href);
   if (normalized === 'all') url.searchParams.delete('category');
   else url.searchParams.set('category', normalized);
+  url.searchParams.delete('product');
   window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+}
+
+function setStorefrontMode(mode, opts = {}) {
+  const preserveCategory = opts.preserveCategory !== false;
+  storefrontMode = mode === 'jewerlys' ? 'jewerlys' : 'electronics';
+  const tgElectronics = document.getElementById('tgElectronics');
+  const tgJewerlys = document.getElementById('tgJewerlys');
+  if (tgElectronics) tgElectronics.classList.toggle('active', storefrontMode === 'electronics');
+  if (tgJewerlys) tgJewerlys.classList.toggle('active', storefrontMode === 'jewerlys');
+  if (!preserveCategory) return;
+  if (storefrontMode === 'jewerlys' && !isJewelryCategory(currentCat)) currentCat = 'jewerlys';
+  if (storefrontMode === 'electronics' && isJewelryCategory(currentCat)) currentCat = 'all';
 }
 
 function renderCategoryChips() {
   const wrap = document.getElementById('catChips');
   if (!wrap) return;
-  const cats = getAvailableCategories();
+  const mode = storefrontMode === 'jewerlys' ? 'jewerlys' : 'electronics';
+  const cats = getAvailableCategories(mode);
+  const primaryCat = mode === 'jewerlys' ? 'jewerlys' : 'all';
+  const primaryLabel = mode === 'jewerlys' ? 'All Jewerlys' : 'All';
   const allChip = `
-    <a class="cat-chip ${currentCat === 'all' ? 'active' : ''}" href="/?category=all" onclick="event.preventDefault(); setCat('all')" data-f="all">
+    <a class="cat-chip ${currentCat === primaryCat ? 'active' : ''}" href="/?category=${encodeURIComponent(primaryCat)}" onclick="event.preventDefault(); setCat('${primaryCat}')" data-f="${primaryCat}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-      All
+      ${primaryLabel}
     </a>`;
-  const chips = cats.map((cat) => `<a class="cat-chip ${currentCat === cat ? 'active' : ''}" href="/?category=${encodeURIComponent(cat)}" onclick="event.preventDefault(); setCat('${cat}')" data-f="${cat}">${categoryDisplayName(cat)}</a>`).join('');
+  const chips = cats
+    .filter((cat) => cat !== primaryCat)
+    .map((cat) => `<a class="cat-chip ${currentCat === cat ? 'active' : ''}" href="/?category=${encodeURIComponent(cat)}" onclick="event.preventDefault(); setCat('${cat}')" data-f="${cat}">${categoryDisplayName(cat)}</a>`)
+    .join('');
   wrap.innerHTML = allChip + chips;
+  requestAnimationFrame(ensureActiveChipVisible);
 }
 
 // ============================================================
@@ -340,60 +919,69 @@ function renderCategoryChips() {
 // ============================================================
 async function loadProducts() {
   document.getElementById('productsGrid').innerHTML = `<div class="loader"><div class="spinner"></div> Loading from database...</div>`;
-  if (!CFG.ENABLE_SUPABASE) {
+  if (!canUseSupabase()) {
     products = FALLBACK_PRODUCTS;
     dbOnline = false;
-    document.getElementById('aStatDb').textContent = 'Demo Mode';
-    document.getElementById('aStatDb').style.color = 'var(--amber)';
+    const statusLabel = CFG.ENABLE_SUPABASE ? 'Offline / Demo' : 'Demo Mode';
+    setDbStatus(statusLabel, 'var(--amber)');
     updateTopbarStats();
     renderCategoryChips();
-    if (!getAllowedFilterCategories().includes(currentCat)) currentCat = 'all';
-    setCat(currentCat, { closeSidebar: false });
+    if (!getAllowedFilterCategories().includes(currentCat)) currentCat = storefrontMode === 'jewerlys' ? 'jewerlys' : 'all';
+    setCat(currentCat, { closeSidebar: false, preserveSearch: true });
     return;
   }
+  setDbStatus('Syncing...', 'var(--primary)');
   try {
-    const { data, error } = await sb.from('products').select('*').eq('active', true).order('created_at', {ascending:false});
-    if (error) throw error;
+    const data = await fetchProductsFromSupabase();
     if (data && data.length > 0) {
       products = data;
       dbOnline = true;
-      document.getElementById('aStatDb').textContent = 'Connected';
-      document.getElementById('aStatDb').style.color = 'var(--green)';
+      setDbStatus('Connected', 'var(--green)');
     } else {
       products = FALLBACK_PRODUCTS;
+      dbOnline = false;
       toast('inf','Using Demo Products','Run supabase-schema.sql to seed your database');
-      document.getElementById('aStatDb').textContent = 'No Data';
+      setDbStatus('Connected (No Data)', 'var(--amber)');
     }
   } catch(e) {
     console.warn('Supabase error:', e.message);
     products = FALLBACK_PRODUCTS;
-    document.getElementById('aStatDb').textContent = 'Using Demo';
-    document.getElementById('aStatDb').style.color = 'var(--amber)';
+    dbOnline = false;
+    if (isSchemaMissingError(e)) {
+      setDbStatus('Schema Missing', 'var(--red)');
+      toast('inf', 'Supabase Schema Missing', 'Run supabase-schema.sql in Supabase SQL Editor, then refresh.');
+    } else {
+      setDbStatus('Offline / Demo', 'var(--amber)');
+    }
   }
   updateTopbarStats();
   renderCategoryChips();
-  if (!getAllowedFilterCategories().includes(currentCat)) currentCat = 'all';
-  setCat(currentCat, { closeSidebar: false });
+  if (!getAllowedFilterCategories().includes(currentCat)) currentCat = storefrontMode === 'jewerlys' ? 'jewerlys' : 'all';
+  setCat(currentCat, { closeSidebar: false, preserveSearch: true });
 }
 
 async function loadAdminOrders() {
   const tbody = document.getElementById('ordersTableBody');
   tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;"><div class="loader" style="padding:0;"><div class="spinner"></div> Loading...</div></td></tr>`;
-  if (!CFG.ENABLE_SUPABASE) {
+  if (!canUseSupabase()) {
     orders = JSON.parse(localStorage.getItem('ltl2_orders') || '[]');
     renderOrdersTable();
     return;
   }
   try {
-    const { data, error } = await sbAdmin.from('orders').select('*').order('created_at', {ascending:false}).limit(50);
-    if (error) throw error;
-    orders = data || [];
+    orders = await fetchOrdersFromSupabase();
+    dbOnline = true;
+    setDbStatus('Connected', 'var(--green)');
     renderOrdersTable();
     updateTopbarStats();
   } catch(e) {
+    console.warn('Supabase orders load failed:', e.message);
+    dbOnline = false;
+    setDbStatus(isSchemaMissingError(e) ? 'Schema Missing' : 'Sync Issue', isSchemaMissingError(e) ? 'var(--red)' : 'var(--amber)');
     orders = JSON.parse(localStorage.getItem('ltl2_orders') || '[]');
     renderOrdersTable();
-    toast('inf','Using Local Orders','Supabase orders table may not exist yet');
+    if (isSchemaMissingError(e)) toast('inf','Supabase Schema Missing','Run supabase-schema.sql in Supabase SQL Editor.');
+    else toast('inf','Using Local Orders','Supabase orders table may not exist yet');
   }
 }
 
@@ -401,12 +989,26 @@ async function loadAdminOrders() {
 // PRODUCT RENDERING
 // ============================================================
 function filterProducts(cat) {
-  if (cat === 'all') return products.filter(p => p.active !== false);
-  return products.filter(p => normalizeCategoryValue(p.category) === cat && p.active !== false);
+  if (cat === 'all') {
+    return products.filter((p) => p.active !== false && !isJewelryCategory(p.category));
+  }
+  if (cat === 'jewerlys') {
+    return products.filter((p) => p.active !== false && isJewelryCategory(p.category));
+  }
+  return products.filter((p) => normalizeCategoryValue(p.category) === cat && p.active !== false);
+}
+
+function handleProductCardKeydown(event, productId) {
+  if (!event) return;
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    openProduct(productId);
+  }
 }
 
 function renderProducts(list) {
   const grid = document.getElementById('productsGrid');
+  displayedProducts = Array.isArray(list) ? [...list] : [];
   if (!list || !list.length) {
     grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">${catIcon('accessories')}<h3>No products found</h3><p>Try a different category or check back soon</p></div>`;
     return;
@@ -417,7 +1019,7 @@ function renderProducts(list) {
     const img = p.images && p.images.length ? `<img src="${p.images[0]}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'"/>` : `<div class="icon-placeholder">${catIcon(p.category)}</div>`;
     const catLabel = cardCategoryLabel(p.category);
     const tagline = String(p.tagline || '').trim();
-    return `<div class="p-card p-card-wide" onclick="openProduct('${p.id}')">
+    return `<div class="p-card p-card-wide" role="button" tabindex="0" aria-label="Open ${escapeHtml(p.name)} details" onclick="openProduct('${p.id}')" onkeydown="handleProductCardKeydown(event,'${p.id}')">
       <div class="p-card-img">
         ${img}
         <div class="p-card-gradient"></div>
@@ -452,33 +1054,58 @@ function renderProducts(list) {
 function setCat(cat, opts = {}) {
   const closeSidebar = opts.closeSidebar !== false;
   const syncUrl = opts.syncUrl !== false;
-  currentCat = normalizeCategoryValue(cat) || 'all';
-  if (
-    !getAllowedFilterCategories().includes(currentCat)
-  ) currentCat = 'all';
+  const preserveSearch = opts.preserveSearch === true;
+  currentPage = 'explore';
+  likedViewActive = false;
+  if (!preserveSearch) {
+    activeSearchQuery = '';
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = '';
+    syncSearchInUrl('');
+  }
+  currentCat = normalizeCategoryValue(cat) || (storefrontMode === 'jewerlys' ? 'jewerlys' : 'all');
+  const nextMode = isJewelryCategory(currentCat) ? 'jewerlys' : 'electronics';
+  if (nextMode !== storefrontMode) {
+    setStorefrontMode(nextMode, { preserveCategory: false });
+    renderCategoryChips();
+  }
+  if (!getAllowedFilterCategories().includes(currentCat)) currentCat = storefrontMode === 'jewerlys' ? 'jewerlys' : 'all';
+  if (storefrontMode === 'jewerlys' && !isJewelryCategory(currentCat)) currentCat = 'jewerlys';
+  if (storefrontMode === 'electronics' && isJewelryCategory(currentCat)) currentCat = 'all';
   document.querySelectorAll('.cat-chip').forEach(c => c.classList.toggle('active', c.dataset.f === currentCat));
   document.querySelectorAll('.nav-item[data-cat]').forEach(n => n.classList.toggle('active', n.dataset.cat === currentCat));
-  const tgElectronics = document.getElementById('tgElectronics');
-  const tgJewerlys = document.getElementById('tgJewerlys');
-  if (tgElectronics && tgJewerlys) {
-    const isJewerlys = currentCat === 'jewerlys';
-    tgElectronics.classList.toggle('active', !isJewerlys);
-    tgJewerlys.classList.toggle('active', isJewerlys);
-  }
+  setStorefrontMode(storefrontMode, { preserveCategory: false });
   const explore = document.querySelector('.nav-item[data-pg="explore"]');
   if (currentCat === 'all') { explore.classList.add('active'); }
   else { explore.classList.remove('active'); }
   document.getElementById('productsTitle').textContent = categoryTitle(currentCat);
   renderProducts(filterProducts(currentCat));
   if (syncUrl) syncCategoryInUrl(currentCat);
+  requestAnimationFrame(ensureActiveChipVisible);
+  updateSeoForCurrentView();
   if (closeSidebar) closeMobileSidebar();
 }
 
 function doSearch(q) {
   const query = q.trim().toLowerCase();
-  if (!query) { renderProducts(filterProducts(currentCat)); return; }
-  renderProducts(products.filter((p) => {
+  if (currentPage !== 'explore') navigate('explore');
+  currentPage = 'explore';
+  likedViewActive = false;
+  activeSearchQuery = query;
+  if (!query) {
+    document.getElementById('productsTitle').textContent = categoryTitle(currentCat);
+    renderProducts(filterProducts(currentCat));
+    syncSearchInUrl('');
+    updateSeoForCurrentView();
+    return;
+  }
+  const normalizedCurrentCat = normalizeCategoryValue(currentCat);
+  const results = products.filter((p) => {
     if (p.active === false) return false;
+    if (storefrontMode === 'jewerlys' && !isJewelryCategory(p.category)) return false;
+    if (storefrontMode === 'electronics' && isJewelryCategory(p.category)) return false;
+    if (normalizedCurrentCat === 'jewerlys' && !isJewelryCategory(p.category)) return false;
+    if (normalizedCurrentCat !== 'all' && normalizedCurrentCat !== 'jewerlys' && normalizeCategoryValue(p.category) !== normalizedCurrentCat) return false;
     const specsText = p.specs && typeof p.specs === 'object' ? Object.values(p.specs).join(' ') : '';
     const highlightsText = Array.isArray(p.highlights) ? p.highlights.join(' ') : '';
     const haystack = [
@@ -491,7 +1118,11 @@ function doSearch(q) {
       highlightsText,
     ].join(' ').toLowerCase();
     return haystack.includes(query);
-  }));
+  });
+  document.getElementById('productsTitle').textContent = `Search Results (${results.length})`;
+  renderProducts(results);
+  syncSearchInUrl(query);
+  updateSeoForCurrentView();
 }
 
 // ============================================================
@@ -500,11 +1131,14 @@ function doSearch(q) {
 function openProduct(id) {
   currentProduct = products.find(p => String(p.id) === String(id));
   if (!currentProduct) return;
+  likedViewActive = false;
   selectedVariant = currentProduct.variants && currentProduct.variants.length ? currentProduct.variants[0] : null;
   detailQty = 1;
   navigate('detail');
   renderDetailGallery(currentProduct);
   renderDetailInfo(currentProduct);
+  syncProductInUrl(String(currentProduct.slug || currentProduct.id || ''));
+  updateSeoForCurrentView();
 }
 
 function renderDetailGallery(p) {
@@ -893,6 +1527,7 @@ function renderCkStep() {
 
 function renderCkSummary() {
   const total = cartTotal() + deliveryFee;
+  const supportLabel = ckData.deliveryZone ? ckData.deliveryZone.split('|')[0] : 'your delivery area';
   document.getElementById('ckSummaryBox').innerHTML = `
     <h4>Order Summary</h4>
     ${cart.map(i=>`
@@ -905,7 +1540,27 @@ function renderCkSummary() {
       <div class="ck-tot-row"><span>Subtotal</span><span>KES ${cartTotal().toLocaleString()}</span></div>
       <div class="ck-tot-row"><span>Delivery${ckData.deliveryZone?' ('+ckData.deliveryZone.split('|')[0]+')':''}</span><span>${deliveryFee > 0 ? 'KES '+deliveryFee.toLocaleString() : 'â€”'}</span></div>
       <div class="ck-tot-row grand"><span>Total</span><span class="ck-amount">KES ${total.toLocaleString()}</span></div>
+    </div>
+    <div class="ck-help-box">
+      <h5>Need help at checkout?</h5>
+      <p>Chat with us for delivery, payment, or product help for ${supportLabel}.</p>
+      <button type="button" class="btn-cta green ck-help-btn" onclick="checkoutHelp()">
+        <svg viewBox="0 0 24 24" fill="white" style="width:16px;height:16px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+        Checkout Help
+      </button>
     </div>`;
+}
+
+function checkoutHelpMessage() {
+  const stepLabel = ['Basket', 'Your Details', 'Payment', 'Done'][Math.max(0, Math.min(3, ckStep - 1))];
+  const area = ckData.deliveryZone ? ckData.deliveryZone.split('|')[0] : 'Not selected yet';
+  const total = (cartTotal() + deliveryFee).toLocaleString();
+  const topItems = cart.slice(0, 4).map((item) => `${item.name} x${item.qty}`).join(', ') || 'No items yet';
+  return encodeURIComponent(`Hi, I need help with checkout. Step: ${stepLabel}. Delivery area: ${area}. Total so far: KES ${total}. Items: ${topItems}.`);
+}
+
+function checkoutHelp() {
+  window.open(getWhatsAppLink(checkoutHelpMessage()), '_blank');
 }
 
 function updateDeliveryFee(val) {
@@ -1023,13 +1678,11 @@ async function saveOrder(orderNum, method, payStatus, total, ref) {
     created_at: new Date().toISOString()
   };
   // Save to Supabase
-  if (CFG.ENABLE_SUPABASE) {
-    try {
-      const { error } = await sb.from('orders').insert([orderObj]);
-      if (error) throw error;
-    } catch(e) {
-      console.warn('Supabase order save failed:', e.message);
-    }
+  if (canUseSupabase()) {
+    await runSupabaseWrite(
+      () => sb.from('orders').insert([orderObj]),
+      { silent: true }
+    );
   }
   // Always save locally as backup
   const localOrders = JSON.parse(localStorage.getItem('ltl2_orders') || '[]');
@@ -1083,7 +1736,32 @@ function toggleWishlist(id) {
   if (wishlist.includes(sid)) { wishlist = wishlist.filter(i=>i!==sid); toast('inf','Removed from wishlist',''); }
   else { wishlist.push(sid); toast('ok','Saved to wishlist',''); }
   localStorage.setItem('ltl2_wishlist', JSON.stringify(wishlist));
+  updateWishlistBadge();
   renderProducts(filterProducts(currentCat));
+}
+
+function updateWishlistBadge() {
+  const badge = document.getElementById('sidebarWishBadge');
+  if (!badge) return;
+  const count = wishlist.length;
+  badge.textContent = count;
+  badge.style.display = count ? 'flex' : 'none';
+}
+
+function showLikedProducts() {
+  navigate('explore');
+  likedViewActive = true;
+  activeSearchQuery = '';
+  syncSearchInUrl('');
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) searchInput.value = '';
+  const liked = products.filter((p) => p.active !== false && wishlist.includes(String(p.id)));
+  document.getElementById('productsTitle').textContent = 'Liked Products';
+  renderProducts(liked);
+  document.querySelectorAll('.cat-chip').forEach((c) => c.classList.remove('active'));
+  document.querySelectorAll('.nav-item[data-cat]').forEach((n) => n.classList.remove('active'));
+  document.querySelectorAll('.nav-item[data-pg]').forEach((n) => n.classList.toggle('active', n.dataset.pg === 'liked'));
+  updateSeoForCurrentView();
 }
 
 // ============================================================
@@ -1123,17 +1801,46 @@ function doAdminLogin() {
 function showAdminDash() {
   document.getElementById('adminLoginScreen').style.display = 'none';
   document.getElementById('adminDashScreen').style.display = 'flex';
+  setAdminCatalogMode(adminCatalogMode, { rerenderProducts: false, rerenderSettings: true });
   updateAdminStats();
   adminTab('products');
 }
 
-function scrollAdminBodyTo(targetEl, behavior = 'smooth') {
+function isProductInAdminMode(product, mode = adminCatalogMode) {
+  const category = normalizeCategoryValue(product?.category);
+  if (!category) return mode !== 'jewerlys';
+  return mode === 'jewerlys' ? isJewelryCategory(category) : !isJewelryCategory(category);
+}
+
+function setAdminCatalogMode(mode, opts = {}) {
+  const rerenderProducts = opts.rerenderProducts !== false;
+  const rerenderSettings = opts.rerenderSettings !== false;
+  adminCatalogMode = mode === 'jewerlys' ? 'jewerlys' : 'electronics';
+
+  const btnE = document.getElementById('adminCatalogElectronics');
+  const btnJ = document.getElementById('adminCatalogJewerlys');
+  if (btnE) btnE.classList.toggle('active', adminCatalogMode === 'electronics');
+  if (btnJ) btnJ.classList.toggle('active', adminCatalogMode === 'jewerlys');
+
+  const scope = document.getElementById('adminScopeLabel');
+  if (scope) scope.textContent = adminCatalogMode === 'jewerlys' ? 'Jewerlys' : 'Electronics';
+
+  const heading = document.getElementById('adminProductsHeading');
+  if (heading) heading.textContent = adminCatalogMode === 'jewerlys' ? 'Jewelry Catalogue' : 'Electronics Catalogue';
+
+  if (rerenderSettings) renderCategoryManagerCards(adminCatalogMode);
+  if (rerenderProducts && document.getElementById('adminProducts')?.style.display !== 'none') renderAdminProducts();
+  updateAdminStats();
+}
+
+function scrollAdminBodyTo(targetEl, behavior = 'auto') {
   const adminBody = document.querySelector('#adminDashScreen .admin-body');
   if (!adminBody || !targetEl) return;
   const bodyRect = adminBody.getBoundingClientRect();
   const targetRect = targetEl.getBoundingClientRect();
   const nextTop = adminBody.scrollTop + (targetRect.top - bodyRect.top) - 10;
-  adminBody.scrollTo({ top: Math.max(0, nextTop), behavior });
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  adminBody.scrollTo({ top: Math.max(0, nextTop), behavior: reduceMotion ? 'auto' : behavior });
 }
 
 function adminTab(tab) {
@@ -1143,12 +1850,13 @@ function adminTab(tab) {
   });
   if (tab==='orders') loadAdminOrders();
   if (tab==='products') renderAdminProducts();
+  if (tab==='settings') renderCategoryManagerCards(adminCatalogMode);
   const adminBody = document.querySelector('#adminDashScreen .admin-body');
-  if (adminBody) adminBody.scrollTo({ top: 0, behavior: 'smooth' });
+  if (adminBody) adminBody.scrollTop = 0;
 }
 
 function updateAdminStats() {
-  document.getElementById('aStatProd').textContent = products.filter(p=>p.active!==false).length;
+  document.getElementById('aStatProd').textContent = products.filter((p) => p.active !== false && isProductInAdminMode(p)).length;
   const lo = JSON.parse(localStorage.getItem('ltl2_orders')||'[]');
   document.getElementById('aStatOrders').textContent = lo.length;
   const rev = lo.filter(o=>o.payment_status==='paid').reduce((s,o)=>s+(o.total||0),0);
@@ -1164,7 +1872,11 @@ function updateTopbarStats() {
 function renderAdminProducts() {
   const tbody = document.getElementById('prodTableBody');
   if (!tbody) return;
-  tbody.innerHTML = products.map(p => `
+  const scopedProducts = products.filter((p) => isProductInAdminMode(p));
+  if (!scopedProducts.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:34px;color:var(--text4);">No products in ${adminCatalogMode === 'jewerlys' ? 'Jewerlys' : 'Electronics'} yet.</td></tr>`;
+  } else {
+    tbody.innerHTML = scopedProducts.map(p => `
     <tr>
       <td><div class="td-prod"><div class="td-thumb">${p.images && p.images[0] ? `<img src="${p.images[0]}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='${catIcon(p.category).replace(/'/g, '&#39;')}'"/>` : catIcon(p.category)}</div><div><div class="td-name">${p.name}</div><div class="td-sub">${p.brand}${p.sku ? ' | SKU: ' + p.sku : ''}${p.images?.length ? ' | ' + p.images.length + ' image' + (p.images.length === 1 ? '' : 's') : ''}</div></div></div></td>
       <td><span class="tag-chip">${p.category}</span></td>
@@ -1183,7 +1895,8 @@ function renderAdminProducts() {
         </div>
       </div></td>
     </tr>`).join('');
-  document.getElementById('aStatProd').textContent = products.filter(p=>p.active!==false).length;
+  }
+  document.getElementById('aStatProd').textContent = scopedProducts.filter((p) => p.active !== false).length;
 }
 
 function renderOrdersTable() {
@@ -1209,7 +1922,10 @@ function renderOrdersTable() {
 function openProdForm(id) {
   const p = id ? products.find(x => String(x.id) === String(id)) : null;
   const wrap = document.getElementById('prodFormWrap');
-  const categories = [...new Set([...DEFAULT_CATEGORIES, ...getAvailableCategories()])];
+  const currentCat = normalizeCategoryValue(p?.category || '');
+  const scopedCats = getAvailableCategories(adminCatalogMode);
+  const categories = [...new Set([...scopedCats, currentCat].filter(Boolean))];
+  const selectedCat = currentCat || categories[0] || (adminCatalogMode === 'jewerlys' ? 'jewerlys' : 'smartphones');
   const brands = getAvailableBrands();
   const images = Array.isArray(p?.images) ? p.images.filter(Boolean) : [];
   const mainImage = images[0] || '';
@@ -1225,7 +1941,7 @@ function openProdForm(id) {
     <div class="form-grid-3">
       <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="pf-name" value="${escapeHtml(p?p.name:'')}"/></div>
       <div class="form-group"><label class="form-label">Brand</label><input class="form-input" id="pf-brand" list="pf-brand-list" value="${escapeHtml(p?p.brand:'')}" placeholder="e.g. Samsung"/><datalist id="pf-brand-list">${brands.map((b)=>`<option value="${escapeHtml(b)}"></option>`).join('')}</datalist></div>
-      <div class="form-group"><label class="form-label">Category</label><input class="form-input" id="pf-cat" list="pf-cat-list" value="${p?normalizeCategoryValue(p.category):''}" placeholder="e.g. smartphones"/><datalist id="pf-cat-list">${categories.map((c)=>`<option value="${c}">${categoryDisplayName(c)}</option>`).join('')}</datalist></div>
+      <div class="form-group"><label class="form-label">Category</label><input class="form-input" id="pf-cat" list="pf-cat-list" value="${selectedCat}" placeholder="${adminCatalogMode === 'jewerlys' ? 'e.g. jewelry-necklaces' : 'e.g. smartphones'}"/><datalist id="pf-cat-list">${categories.map((c)=>`<option value="${c}">${categoryDisplayName(c)}</option>`).join('')}</datalist></div>
     </div>
     <div class="form-grid-3">
       <div class="form-group"><label class="form-label">Price (KES)</label><input type="number" class="form-input" id="pf-price" value="${p?p.price:''}"/></div>
@@ -1258,6 +1974,19 @@ function openProdForm(id) {
         <button type="button" class="btn-cta outline pf-mini-btn" onclick="normalizeProductImageInputs(true)">Normalize Image URLs</button>
         <span class="pf-img-status" id="pfImgStatus">No images yet</span>
       </div>
+      <div class="pf-quick-url-row">
+        <input class="form-input" id="pf-quick-image" placeholder="Paste one image URL and click Add URL" onkeydown="if(event.key==='Enter'){event.preventDefault();addQuickProductImage();}"/>
+        <button type="button" class="btn-cta blue pf-mini-btn" onclick="addQuickProductImage()">Add URL</button>
+      </div>
+      <div class="pf-url-help">
+        <div class="pf-url-help-head">Where to get product image URLs</div>
+        <div class="pf-url-help-links">
+          <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a>
+          <a href="https://www.pexels.com" target="_blank" rel="noopener">Pexels</a>
+          <a href="https://postimages.org" target="_blank" rel="noopener">Postimages</a>
+        </div>
+        <p>Use direct image links (jpg/png/webp). Google, Pinterest, and Postimg links can still work after you click "Normalize Image URLs".</p>
+      </div>
       <input type="hidden" id="pf-images" value="${escapeHtml(images.join(', '))}"/>
       <div style="font-size:11.5px;color:var(--text4);margin-top:7px;">Google/Pinterest redirect links are auto-normalized to direct image URLs when possible.</div>
       <div class="prod-img-grid" id="pfImgGrid" style="margin-top:10px;">
@@ -1282,7 +2011,7 @@ function openProdForm(id) {
   bindProdFormLivePreview();
   normalizeProductImageInputs(false);
   updateProductFormPreview();
-  scrollAdminBodyTo(wrap, 'smooth');
+  requestAnimationFrame(() => scrollAdminBodyTo(wrap, 'auto'));
 }
 
 async function saveProd(id) {
@@ -1310,51 +2039,67 @@ async function saveProd(id) {
     tagline: tagline || null,
     highlights,
   };
+  let dbSynced = !canUseSupabase();
   if (id) {
     const idx = products.findIndex(p => String(p.id) === String(id));
     if (idx > -1) { products[idx] = {...products[idx], ...obj}; }
     // Upsert to Supabase
-    if (CFG.ENABLE_SUPABASE) {
-      try {
-        const { error } = await sbAdmin.from('products').update(obj).eq('id', id);
-        if (error) throw error;
-      } catch(e) {
-        try {
-          const { error: fallbackError } = await sbAdmin.from('products').update(baseObj).eq('id', id);
-          if (fallbackError) throw fallbackError;
+    if (canUseSupabase()) {
+      dbSynced = await runSupabaseWrite(
+        () => sbAdmin.from('products').update(obj).eq('id', id),
+        { silent: true }
+      );
+      if (!dbSynced) {
+        dbSynced = await runSupabaseWrite(
+          () => sbAdmin.from('products').update(baseObj).eq('id', id),
+          { silent: true }
+        );
+        if (dbSynced) {
           toast('inf', 'Saved with core fields', 'Your table may not yet have sku/tagline/highlights/specs columns.');
-        } catch (_) {
-          console.warn('Supabase update failed');
         }
       }
     }
-    toast('ok','Product Updated', name);
+    toast(dbSynced ? 'ok' : 'inf', dbSynced ? 'Product Updated' : 'Updated Locally', name);
   } else {
     const newP = { ...obj, id:'l'+Date.now() };
     products.unshift(newP);
     // Insert to Supabase
-    if (CFG.ENABLE_SUPABASE) {
-      try {
-        const { data, error } = await sbAdmin.from('products').insert([{...obj}]).select();
-        if (error) throw error;
-        if (data?.[0]) newP.id = data[0].id;
-      } catch(e) {
-        try {
-          const { data: fallbackData, error: fallbackError } = await sbAdmin.from('products').insert([{...baseObj}]).select();
-          if (fallbackError) throw fallbackError;
-          if (fallbackData?.[0]) newP.id = fallbackData[0].id;
+    if (canUseSupabase()) {
+      let insertedRow = null;
+      dbSynced = await runSupabaseWrite(
+        async () => {
+          const { data, error } = await sbAdmin.from('products').insert([{...obj}]).select();
+          if (error) throw error;
+          if (data?.[0]) insertedRow = data[0];
+          return { data };
+        },
+        { silent: true }
+      );
+      if (!dbSynced) {
+        dbSynced = await runSupabaseWrite(
+          async () => {
+            const { data, error } = await sbAdmin.from('products').insert([{...baseObj}]).select();
+            if (error) throw error;
+            if (data?.[0]) insertedRow = data[0];
+            return { data };
+          },
+          { silent: true }
+        );
+        if (dbSynced) {
           toast('inf', 'Saved with core fields', 'Your table may not yet have sku/tagline/highlights/specs columns.');
-        } catch (_) {
-          console.warn('Supabase insert failed');
         }
       }
+      if (insertedRow?.id) newP.id = insertedRow.id;
     }
-    toast('ok','Product Added', name);
+    toast(dbSynced ? 'ok' : 'inf', dbSynced ? 'Product Added' : 'Added Locally', name);
+  }
+  if (canUseSupabase() && !dbSynced) {
+    toast('inf', 'Supabase Sync Issue', 'This product is updated locally but did not sync to Supabase yet.');
   }
   document.getElementById('prodFormWrap').style.display = 'none';
   renderAdminProducts();
   renderCategoryChips();
-  if (!getAllowedFilterCategories().includes(currentCat)) currentCat = 'all';
+  if (!getAllowedFilterCategories().includes(currentCat)) currentCat = storefrontMode === 'jewerlys' ? 'jewerlys' : 'all';
   setCat(currentCat, { closeSidebar: false });
 }
 
@@ -1362,13 +2107,19 @@ async function toggleActive(id) {
   const p = products.find(x => String(x.id) === String(id));
   if (!p) return;
   p.active = !p.active;
-  if (CFG.ENABLE_SUPABASE) {
-    try { await sbAdmin.from('products').update({active:p.active}).eq('id', id); } catch(e) {}
-  }
+  const dbSynced = canUseSupabase()
+    ? await runSupabaseWrite(
+        () => sbAdmin.from('products').update({active:p.active}).eq('id', id),
+        { silent: true }
+      )
+    : true;
   renderAdminProducts();
   renderCategoryChips();
-  if (!getAllowedFilterCategories().includes(currentCat)) currentCat = 'all';
+  if (!getAllowedFilterCategories().includes(currentCat)) currentCat = storefrontMode === 'jewerlys' ? 'jewerlys' : 'all';
   setCat(currentCat, { closeSidebar: false });
+  if (canUseSupabase() && !dbSynced) {
+    toast('inf', 'Supabase Sync Issue', 'Status changed locally but did not sync to Supabase.');
+  }
   toast('inf', p.active ? 'Product Activated' : 'Product Hidden', p.name);
 }
 
@@ -1376,13 +2127,19 @@ async function deleteProduct(id) {
   const p = products.find(x => String(x.id) === String(id));
   if (!p || !confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
   products = products.filter(x => String(x.id) !== String(id));
-  if (CFG.ENABLE_SUPABASE) {
-    try { await sbAdmin.from('products').delete().eq('id', id); } catch(e) {}
-  }
+  const dbSynced = canUseSupabase()
+    ? await runSupabaseWrite(
+        () => sbAdmin.from('products').delete().eq('id', id),
+        { silent: true }
+      )
+    : true;
   renderAdminProducts();
   renderCategoryChips();
-  if (!getAllowedFilterCategories().includes(currentCat)) currentCat = 'all';
+  if (!getAllowedFilterCategories().includes(currentCat)) currentCat = storefrontMode === 'jewerlys' ? 'jewerlys' : 'all';
   setCat(currentCat, { closeSidebar: false });
+  if (canUseSupabase() && !dbSynced) {
+    toast('inf', 'Supabase Sync Issue', 'Deleted locally, but Supabase delete did not complete.');
+  }
   toast('err','Deleted', p.name);
 }
 
@@ -1390,28 +2147,35 @@ async function deleteProduct(id) {
 // NAVIGATION
 // ============================================================
 function navigate(page, cat) {
+  currentPage = page;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   const siteFooter = document.getElementById('siteFooter');
   document.body.classList.toggle('hide-site-footer', page !== 'explore');
   if (siteFooter) siteFooter.style.display = page === 'explore' ? '' : 'none';
   if (page === 'explore') {
+    syncProductInUrl('');
     if (cat) setCat(cat);
     else renderProducts(filterProducts(currentCat));
+    if (!cat) updateSeoForCurrentView();
+  } else if (page !== 'detail') {
+    syncProductInUrl('');
   }
   document.querySelectorAll('.nav-item[data-pg]').forEach(n => n.classList.toggle('active', n.dataset.pg === page));
   window.scrollTo({top:0,behavior:'smooth'});
   closeMobileSidebar();
+  if (page !== 'explore') updateSeoForCurrentView();
 }
 
 function topbarToggle(mode) {
-  const tgElectronics = document.getElementById('tgElectronics');
-  const tgJewerlys = document.getElementById('tgJewerlys');
-  if (tgElectronics) tgElectronics.classList.toggle('active', mode === 'electronics');
-  if (tgJewerlys) tgJewerlys.classList.toggle('active', mode === 'jewerlys');
+  setStorefrontMode(mode, { preserveCategory: true });
+  renderCategoryChips();
   navigate('explore');
-  if (mode === 'jewerlys') setCat('jewerlys', { closeSidebar: false });
-  else setCat('all', { closeSidebar: false });
+  if (mode === 'jewerlys') {
+    setCat(isJewelryCategory(currentCat) ? currentCat : 'jewerlys', { closeSidebar: false });
+  } else {
+    setCat(!isJewelryCategory(currentCat) ? currentCat : 'all', { closeSidebar: false });
+  }
 }
 
 // ============================================================
@@ -1470,17 +2234,42 @@ window.addEventListener('resize', () => {
 // ============================================================
 // INIT
 // ============================================================
+(function bindConnectionRecovery() {
+  window.addEventListener('online', () => {
+    if (!canUseSupabase()) return;
+    setDbStatus('Reconnecting...', 'var(--primary)');
+    loadProducts();
+    if (adminAuth) loadAdminOrders();
+  });
+})();
+
 (async function init() {
   const initialCategory = getCategoryFromUrl();
   if (initialCategory) currentCat = initialCategory;
+  storefrontMode = isJewelryCategory(currentCat) ? 'jewerlys' : 'electronics';
   const initialQuery = getSearchQueryFromUrl();
+  const initialProductSlug = getProductSlugFromUrl();
 
   loadSidebarState();
+  setStorefrontMode(storefrontMode, { preserveCategory: true });
   loadStoreSettings();
   loadBrandingSettings();
+  if (CFG.ENABLE_SUPABASE && !sb) {
+    setDbStatus('Config Issue', 'var(--red)');
+    toast('inf', 'Supabase Not Ready', 'Using local/demo data until Supabase client is available.');
+  }
   updateCartUI();
+  updateWishlistBadge();
   updateTopbarStats();
   await loadProducts();
+
+  if (initialProductSlug) {
+    const match = products.find((p) => String(p.slug || '').toLowerCase() === initialProductSlug || String(p.id || '').toLowerCase() === initialProductSlug);
+    if (match) {
+      openProduct(match.id);
+      return;
+    }
+  }
 
   if (initialQuery) {
     const searchInput = document.getElementById('searchInput');
@@ -1744,6 +2533,26 @@ function updateBannerPreview(slot, url) {
 }
 
 // ===== CATEGORY IMAGE MANAGER =====
+function renderCategoryManagerCards(mode = adminCatalogMode) {
+  const grid = document.getElementById('catManagerGrid');
+  if (!grid) return;
+  const previousValues = {};
+  grid.querySelectorAll('input[id^="catImg-"]').forEach((el) => { previousValues[el.id] = el.value || ''; });
+  const cats = getAvailableCategories(mode);
+  grid.innerHTML = cats.map((cat) => `
+    <div class="cat-manager-card" data-cat="${cat}">
+      <div class="cmc-img"><div class="cmc-placeholder">${catIcon(cat)}</div></div>
+      <div class="cmc-body">
+        <div class="cmc-name">${categoryDisplayName(cat)}</div>
+        <div class="cmc-url">
+          <input class="form-input" id="catImg-${cat}" placeholder="Direct or shared image URL" style="font-size:11.5px;padding:7px 10px;" value="${escapeHtml(previousValues['catImg-' + cat] || '')}"/>
+          <button onclick="applyCatImg('${cat}')">Set</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
 function applyCatImg(cat) {
   const input = document.getElementById('catImg-' + cat);
   const rawUrl = input?.value || '';
@@ -1822,6 +2631,47 @@ function normalizeProductImageInputs(showToast = false) {
     else toast('err', 'No valid image URLs', 'Paste direct image links or supported redirect links.');
   }
   return urls;
+}
+
+function addQuickProductImage() {
+  const quickInput = document.getElementById('pf-quick-image');
+  const mainInput = document.getElementById('pf-main-image');
+  const galleryInput = document.getElementById('pf-gallery-images');
+  if (!quickInput || !mainInput || !galleryInput) return;
+
+  const rawUrl = quickInput.value.trim();
+  if (!rawUrl) {
+    toast('inf', 'No URL entered', 'Paste an image URL first.');
+    return;
+  }
+
+  const normalized = normalizeImageUrl(rawUrl);
+  if (!normalized) {
+    toast('err', 'Invalid Image URL', 'Use a direct image URL or a supported redirect link.');
+    return;
+  }
+
+  const mainCurrent = normalizeImageUrl(mainInput.value.trim());
+  const galleryCurrent = normalizeImageUrlList(galleryInput.value);
+  const combined = [];
+  const seen = new Set();
+  const addUnique = (url) => {
+    if (!url || seen.has(url)) return;
+    seen.add(url);
+    combined.push(url);
+  };
+
+  addUnique(mainCurrent);
+  galleryCurrent.forEach(addUnique);
+  addUnique(normalized);
+
+  mainInput.value = combined[0] || '';
+  galleryInput.value = combined.slice(1).join('\n');
+  quickInput.value = '';
+
+  normalizeProductImageInputs(true);
+  updateProductFormPreview();
+  quickInput.focus();
 }
 
 function updateImgPreviews() {

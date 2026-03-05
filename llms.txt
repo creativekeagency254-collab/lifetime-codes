@@ -1,0 +1,38 @@
+# Life Time Technology Store
+
+Official domain: https://lifetimetechnology.store
+Primary region: Kenya
+Primary currency: KES
+
+## Storefront Scope
+- Premium electronics and jewelry catalogue
+- Product discovery by category, brand, price, and search
+- Assisted checkout and WhatsApp support
+
+## Main Categories
+- Electronics: smartphones, laptops, watches, audio, tablets, kitchen-accessories, gaming, smart-home
+- Jewelry: jewerlys, jewelry-necklaces, jewelry-rings, jewelry-bracelets, jewelry-earrings, jewelry-watches
+
+## URL Patterns
+- Homepage: https://lifetimetechnology.store/
+- Category view: https://lifetimetechnology.store/?category={category-slug}
+- Search view: https://lifetimetechnology.store/?category={category-slug}&q={query}
+- Product detail (SPA state): https://lifetimetechnology.store/?category={category-slug}&product={product-slug}
+
+## Product Fields
+- name
+- brand
+- category
+- price
+- original_price
+- stock
+- description
+- specs (key-value)
+- variants
+- images
+- highlights
+
+## Admin
+- Catalog management for electronics and jewelry scopes
+- Product image URL support with normalization
+- Banner and category image controls

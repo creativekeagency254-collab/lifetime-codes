@@ -11,6 +11,7 @@ Clean static website setup for easy deployment to Vercel.
 - `robots.txt` - Search engine crawl rules
 - `sitemap.xml` - Primary sitemap for production domain
 - `vercel.json` - Vercel config
+- `supabase-schema.sql` - Required tables/policies for Supabase (`products`, `orders`)
 
 ## Run Locally
 
@@ -21,6 +22,12 @@ http-server -p 3000 -c-1 .
 Then open:
 
 - `http://localhost:3000`
+
+## Supabase Setup
+
+1. Open Supabase SQL Editor for project `fbulitfyarmnyegxduqy`.
+2. Run the SQL from `supabase-schema.sql`.
+3. Refresh the website/admin dashboard.
 
 ## Deploy to Vercel
 
