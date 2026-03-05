@@ -1852,11 +1852,6 @@ body.hide-site-footer #siteFooter {
 }
 
 .banner-card,
-.hero-banner-img,
-#page-explore .hero-banner-img .hb-overlay,
-.promo-img-card .pic-overlay,
-#page-explore #promoCard1 .pic-overlay,
-#page-explore #promoCard2 .pic-overlay,
 .p-card-gradient,
 .image-tile::after {
   background-image: none !important;
@@ -1864,7 +1859,6 @@ body.hide-site-footer #siteFooter {
 
 .banner-card::before,
 .banner-card::after,
-.hero-pulse,
 .banner-card .pulse-dot,
 .image-marquee-center {
   display: none !important;
