@@ -2471,6 +2471,8 @@ textarea:focus-visible,
 }
 
 #productsGrid .p-card .p-card-footer {
+  display: flex;
+  justify-content: space-between;
   align-items: flex-end;
   gap: 10px;
 }
@@ -2494,6 +2496,7 @@ textarea:focus-visible,
   height: 42px;
   min-width: 116px;
   padding: 0 14px;
+  margin-left: auto;
   border-radius: 999px;
   border: 1.5px solid #111;
   background: #fff;
@@ -2645,12 +2648,22 @@ textarea:focus-visible,
   background: #050608 !important;
 }
 
-[data-theme="dark"] #productsGrid .p-card .p-card-add,
 [data-theme="dark"] #productsGrid .p-card .wish-btn,
 [data-theme="dark"] #productsGrid .p-card .p-badge {
   background: rgba(14, 16, 19, 0.9) !important;
   border-color: rgba(194, 203, 215, 0.58) !important;
   color: #eceff4 !important;
+}
+
+[data-theme="dark"] #productsGrid .p-card .p-card-add {
+  background: #fff !important;
+  border-color: #fff !important;
+  color: #111 !important;
+}
+
+[data-theme="dark"] #productsGrid .p-card .p-card-add svg {
+  color: #111 !important;
+  stroke: #111 !important;
 }
 
 /* ===================== HEADER + CHECKOUT VISIBILITY FIXES ===================== */
