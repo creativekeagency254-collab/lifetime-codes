@@ -1625,6 +1625,11 @@ body.sidebar-collapsed .brand-logo-img {
   animation: imageMarqueeMove 22s linear infinite;
 }
 
+.image-marquee:hover .image-marquee-track,
+.image-marquee:focus-within .image-marquee-track {
+  animation-play-state: paused;
+}
+
 .image-tile {
   width: 168px;
   height: 96px;
@@ -1633,6 +1638,7 @@ body.sidebar-collapsed .brand-logo-img {
   border: 1px solid var(--border);
   background: #e5e7eb;
   flex: 0 0 auto;
+  cursor: pointer;
 }
 
 .image-tile img {
@@ -1896,6 +1902,11 @@ body.sidebar-collapsed .brand-logo-img {
 .image-tile-icon svg {
   width: 16px;
   height: 16px;
+}
+
+.image-tile:focus-visible {
+  outline: 3px solid rgba(249, 115, 22, 0.45);
+  outline-offset: 2px;
 }
 
 @media(max-width:900px){

@@ -894,7 +894,7 @@ const CATEGORY_TITLE_MAP = {
   gaming: 'Gaming Gear',
   'smart-home': 'Smart Home',
   accessories: 'Accessories',
-  jewerlys: 'Jewerlys',
+  jewerlys: 'Jewelry',
   'jewelry-necklaces': 'Necklaces',
   'jewelry-rings': 'Rings',
   'jewelry-bracelets': 'Bracelets',
@@ -930,7 +930,7 @@ const CATEGORY_CARD_LABEL_MAP = {
 };
 const HEADER_TOGGLE_CATEGORIES = [...DEFAULT_JEWELRY_CATEGORIES];
 const SEO_BASE_URL = 'https://lifetimetechnology.store';
-const SEO_SITE_NAME = 'Life Time Technology Store';
+const SEO_SITE_NAME = 'Lifetime Technology Store';
 const SEO_DEFAULT_IMAGE = `${SEO_BASE_URL}/assets/images/logo-original.png`;
 const CATEGORY_SEO_COPY = {
   all: {
@@ -1011,8 +1011,8 @@ const CATEGORY_SEO_COPY = {
 };
 const FOOTER_INFO_CONTENT = {
   'about-us': {
-    title: 'About Life Time Technology Store',
-    text: 'Life Time Technology Store is a Nairobi-based team curating premium electronics and jewelry. We focus on authentic products, transparent pricing, and assisted customer support.',
+    title: 'About Lifetime Technology Store',
+    text: 'Lifetime Technology Store is a Nairobi-based team curating premium electronics and jewelry. We focus on authentic products, transparent pricing, and assisted customer support.',
   },
   careers: {
     title: 'Careers',
@@ -1428,13 +1428,13 @@ function buildDynamicSchema(context) {
       },
       {
         '@type': 'AboutPage',
-        name: 'About Life Time Technology Store',
+        name: 'About Lifetime Technology Store',
         description: 'Nairobi-based electronics and jewelry store focused on quality products and guided support.',
         url: `${SEO_BASE_URL}/#footerMiniBlog`,
       },
       {
         '@type': 'Blog',
-        name: 'Life Time Tech Buyer Guides',
+        name: 'Lifetime Tech Buyer Guides',
         description: 'Short buying and care guides for smartphones, laptops, gaming, and jewelry in Kenya.',
         url: `${SEO_BASE_URL}/#footerMiniBlog`,
       },
@@ -1573,7 +1573,7 @@ function renderCategoryChips() {
   const mode = storefrontMode === 'jewerlys' ? 'jewerlys' : 'electronics';
   const cats = getAvailableCategories(mode);
   const primaryCat = mode === 'jewerlys' ? 'jewerlys' : 'all';
-  const primaryLabel = mode === 'jewerlys' ? 'All Jewerlys' : 'All';
+  const primaryLabel = mode === 'jewerlys' ? 'All Jewelry' : 'All';
   const allChip = `
     <a class="cat-chip ${currentCat === primaryCat ? 'active' : ''}" href="/?category=${encodeURIComponent(primaryCat)}" onclick="event.preventDefault(); setCat('${primaryCat}')" data-f="${primaryCat}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
@@ -2540,12 +2540,12 @@ function setAdminCatalogMode(mode, opts = {}) {
   if (btnJ) btnJ.classList.toggle('active', adminCatalogMode === 'jewerlys');
 
   const scope = document.getElementById('adminScopeLabel');
-  if (scope) scope.textContent = adminCatalogMode === 'jewerlys' ? 'Jewerlys' : 'Electronics';
+  if (scope) scope.textContent = adminCatalogMode === 'jewerlys' ? 'Jewelry' : 'Electronics';
 
   const heading = document.getElementById('adminProductsHeading');
   if (heading) heading.textContent = adminCatalogMode === 'jewerlys' ? 'Jewelry Catalogue' : 'Electronics Catalogue';
   const catScope = document.getElementById('catAddScopeLabel');
-  if (catScope) catScope.textContent = adminCatalogMode === 'jewerlys' ? 'Jewerlys' : 'Electronics';
+  if (catScope) catScope.textContent = adminCatalogMode === 'jewerlys' ? 'Jewelry' : 'Electronics';
 
   const seedBtn = document.getElementById('btnSeedJewelryAdmin');
   if (seedBtn) seedBtn.style.display = adminCatalogMode === 'jewerlys' ? 'inline-flex' : 'none';
@@ -2596,7 +2596,7 @@ function renderAdminProducts() {
   if (!tbody) return;
   const scopedProducts = products.filter((p) => isProductInAdminMode(p));
   if (!scopedProducts.length) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:34px;color:var(--text4);">No products in ${adminCatalogMode === 'jewerlys' ? 'Jewerlys' : 'Electronics'} yet.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:34px;color:var(--text4);">No products in ${adminCatalogMode === 'jewerlys' ? 'Jewelry' : 'Electronics'} yet.</td></tr>`;
   } else {
     tbody.innerHTML = scopedProducts.map(p => `
     <tr>
@@ -3228,7 +3228,7 @@ function loadBrandingSettings() {
 }
 
 function applyStoreName(name) {
-  const clean = String(name || '').trim() || 'Life Time Limited';
+  const clean = String(name || '').trim() || 'Lifetime Limited';
   const footerName = document.querySelector('.sf-bottom-left strong');
   if (footerName) footerName.textContent = clean;
   const adminName = document.querySelector('.admin-footer-left strong');
@@ -3264,6 +3264,21 @@ function syncMarqueeInputControls() {
   if (jewerlysInput) jewerlysInput.value = marqueeImageState.jewerlys.join('\n');
 }
 
+function openMarqueeCategory(cat) {
+  const targetCat = normalizeCategoryValue(cat);
+  if (!targetCat) return;
+  if (currentPage !== 'explore') navigate('explore');
+  setCat(targetCat, { preserveSearch: false });
+}
+
+function handleMarqueeTileKeydown(event, cat) {
+  if (!event) return;
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    openMarqueeCategory(cat);
+  }
+}
+
 function renderImageMarquee(mode = storefrontMode) {
   const track = document.getElementById('imageMarqueeTrack');
   if (!track) return;
@@ -3280,8 +3295,10 @@ function renderImageMarquee(mode = storefrontMode) {
     const cat = iconCats[index % iconCats.length];
     const safeUrl = escapeHtml(url);
     const safeAlt = escapeHtml(`${scopeLabel} product image ${index % sourceUrls.length + 1}`);
+    const safeCategoryLabel = escapeHtml(categoryDisplayName(cat));
+    const safeCat = escapeHtml(cat);
     return `
-      <div class="image-tile">
+      <div class="image-tile" role="button" tabindex="0" aria-label="Open ${safeCategoryLabel} products" title="View ${safeCategoryLabel}" onclick="openMarqueeCategory('${safeCat}')" onkeydown="handleMarqueeTileKeydown(event,'${safeCat}')">
         <img src="${safeUrl}" alt="${safeAlt}" loading="lazy" onerror="this.style.display='none'"/>
         <span class="image-tile-icon" aria-hidden="true">${catIcon(cat)}</span>
       </div>
@@ -3298,7 +3315,7 @@ function applyMarqueeSettings(showToast = true) {
   };
   syncMarqueeInputControls();
   renderImageMarquee(storefrontMode);
-  if (showToast) toast('ok', 'Strip Updated', 'Moving strip images updated for Electronics and Jewerlys.');
+  if (showToast) toast('ok', 'Strip Updated', 'Moving strip images updated for Electronics and Jewelry.');
 }
 
 function loadStoreSettings() {
@@ -3332,7 +3349,7 @@ function loadStoreSettings() {
   }
   syncMarqueeInputControls();
   renderImageMarquee(storefrontMode);
-  applyStoreName(saved.storeName || 'Life Time Limited');
+  applyStoreName(saved.storeName || 'Lifetime Limited');
 }
 
 function applyBrandingSettings(showToast = true) {
@@ -3343,7 +3360,7 @@ function applyBrandingSettings(showToast = true) {
 
 function saveStoreSettings() {
   const wa = document.getElementById('settingsWA')?.value?.trim() || CFG.WHATSAPP;
-  const storeName = document.getElementById('settingsStoreName')?.value?.trim() || 'Life Time Limited';
+  const storeName = document.getElementById('settingsStoreName')?.value?.trim() || 'Lifetime Limited';
   const supportEmail = document.getElementById('settingsSupportEmail')?.value?.trim() || 'support@lifetimeltd.co.ke';
   const sbUrlInput = String(document.getElementById('settingsSbUrl')?.value || CFG.SUPABASE_URL || '').trim();
   const sbKeyInput = String(document.getElementById('settingsSbKey')?.value || CFG.SUPABASE_PUBLISHABLE || CFG.SUPABASE_ANON || '').trim();
@@ -3497,12 +3514,12 @@ function renderCustomCategoryList(mode = adminCatalogMode) {
   const wrap = document.getElementById('customCategoryList');
   const scopeLabel = document.getElementById('catAddScopeLabel');
   const input = document.getElementById('newCategoryName');
-  if (scopeLabel) scopeLabel.textContent = mode === 'jewerlys' ? 'Jewerlys' : 'Electronics';
+  if (scopeLabel) scopeLabel.textContent = mode === 'jewerlys' ? 'Jewelry' : 'Electronics';
   if (input) input.placeholder = mode === 'jewerlys' ? 'e.g. Jewelry Pendants' : 'e.g. Cameras';
   if (!wrap) return;
   const customEntries = getCustomCategoryEntries(mode);
   if (!customEntries.length) {
-    wrap.innerHTML = `<div class="custom-cat-empty">No custom categories yet for ${mode === 'jewerlys' ? 'Jewerlys' : 'Electronics'}.</div>`;
+    wrap.innerHTML = `<div class="custom-cat-empty">No custom categories yet for ${mode === 'jewerlys' ? 'Jewelry' : 'Electronics'}.</div>`;
     return;
   }
   wrap.innerHTML = customEntries.map((entry) => `
@@ -3562,7 +3579,7 @@ async function addCustomCategory() {
       if (!isSchemaProblemError(error)) console.warn('Could not sync category to Supabase:', error?.message || error);
     }
   }
-  toast('ok', 'Category Added', `${entry.name} added to ${mode === 'jewerlys' ? 'Jewerlys' : 'Electronics'}.`);
+  toast('ok', 'Category Added', `${entry.name} added to ${mode === 'jewerlys' ? 'Jewelry' : 'Electronics'}.`);
 }
 
 async function removeCustomCategory(slug, mode = adminCatalogMode) {
