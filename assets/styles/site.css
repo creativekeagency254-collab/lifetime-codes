@@ -2516,3 +2516,102 @@ textarea:focus-visible,
     height: 38px;
   }
 }
+
+/* ===================== DARK MODE: CHARCOAL VANTA + SILVER GLARE ===================== */
+[data-theme="dark"] {
+  --outer-bg: #020203;
+  --bg: #050607;
+  --white: #0a0b0d;
+  --card-bg: #0c0d10;
+  --border: #8a909a;
+  --border2: #9aa1ab;
+  --text: #eceef1;
+  --text2: #d3d7dd;
+  --text3: #a4aab4;
+  --text4: #7f8794;
+  --text5: #626a76;
+}
+
+[data-theme="dark"] .app-outer {
+  background:
+    radial-gradient(1200px 600px at 18% -10%, rgba(201, 209, 220, 0.09), transparent 64%),
+    radial-gradient(980px 540px at 82% 0%, rgba(124, 133, 148, 0.1), transparent 62%),
+    linear-gradient(180deg, #010102 0%, #050608 52%, #030407 100%);
+}
+
+[data-theme="dark"] .topbar,
+[data-theme="dark"] .sidebar,
+[data-theme="dark"] .site-footer,
+[data-theme="dark"] .hero-banner-img,
+[data-theme="dark"] .promo-img-card,
+[data-theme="dark"] .image-marquee,
+[data-theme="dark"] .p-card,
+[data-theme="dark"] .table-wrap,
+[data-theme="dark"] .prod-form,
+[data-theme="dark"] .ck-main,
+[data-theme="dark"] .ck-summary,
+[data-theme="dark"] .admin-shell,
+[data-theme="dark"] .a-stat,
+[data-theme="dark"] .admin-topbar {
+  background: linear-gradient(145deg, rgba(7, 8, 10, 0.92), rgba(14, 16, 19, 0.78)) !important;
+  border: 1px solid rgba(186, 194, 205, 0.42) !important;
+  box-shadow:
+    0 0 0 1px rgba(238, 242, 248, 0.06) inset,
+    0 14px 38px rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(12px) saturate(125%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(125%) !important;
+}
+
+[data-theme="dark"] .topbar::before,
+[data-theme="dark"] .sidebar::before,
+[data-theme="dark"] .site-footer::before,
+[data-theme="dark"] .hero-banner-img::before,
+[data-theme="dark"] .promo-img-card::before,
+[data-theme="dark"] .image-marquee::before,
+[data-theme="dark"] .p-card::before,
+[data-theme="dark"] .table-wrap::before,
+[data-theme="dark"] .prod-form::before,
+[data-theme="dark"] .ck-main::before,
+[data-theme="dark"] .ck-summary::before,
+[data-theme="dark"] .admin-shell::before,
+[data-theme="dark"] .a-stat::before,
+[data-theme="dark"] .admin-topbar::before {
+  background-image: linear-gradient(110deg, transparent 30%, rgba(245, 248, 252, 0.2) 49%, transparent 66%);
+  animation-duration: 9.5s;
+}
+
+[data-theme="dark"] .topbar::after,
+[data-theme="dark"] .sidebar::after,
+[data-theme="dark"] .site-footer::after,
+[data-theme="dark"] .hero-banner-img::after,
+[data-theme="dark"] .promo-img-card::after,
+[data-theme="dark"] .image-marquee::after,
+[data-theme="dark"] .p-card::after,
+[data-theme="dark"] .table-wrap::after,
+[data-theme="dark"] .prod-form::after,
+[data-theme="dark"] .ck-main::after,
+[data-theme="dark"] .ck-summary::after,
+[data-theme="dark"] .admin-shell::after,
+[data-theme="dark"] .a-stat::after,
+[data-theme="dark"] .admin-topbar::after {
+  background: linear-gradient(90deg, transparent 0%, rgba(210, 218, 229, 0.9) 50%, transparent 100%);
+  opacity: 0.9;
+}
+
+[data-theme="dark"] #productsGrid .p-card {
+  background: linear-gradient(145deg, rgba(7, 8, 10, 0.95), rgba(15, 18, 22, 0.84)) !important;
+  border: 1.5px solid rgba(185, 194, 206, 0.44) !important;
+}
+
+[data-theme="dark"] #productsGrid .p-card .p-card-img {
+  border-color: rgba(195, 204, 216, 0.45) !important;
+  background: #050608 !important;
+}
+
+[data-theme="dark"] #productsGrid .p-card .p-card-add,
+[data-theme="dark"] #productsGrid .p-card .wish-btn,
+[data-theme="dark"] #productsGrid .p-card .p-badge {
+  background: rgba(14, 16, 19, 0.9) !important;
+  border-color: rgba(194, 203, 215, 0.58) !important;
+  color: #eceff4 !important;
+}
