@@ -2982,18 +2982,37 @@ function toastOnce(cacheKey, type, title, msg, ttlMs = 2 * 60 * 60 * 1000) {
 // ============================================================
 // MOBILE SIDEBAR
 // ============================================================
+function isMobileViewport() {
+  return window.matchMedia('(max-width: 900px)').matches;
+}
+
+function setMobileSidebarOpen(open) {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('mobOverlay');
+  if (!sidebar || !overlay) return;
+  const isOpen = Boolean(open);
+  sidebar.classList.toggle('open', isOpen);
+  overlay.classList.toggle('show', isOpen);
+  document.body.classList.toggle('mobile-sidebar-open', isOpen);
+}
+
 function toggleMobileSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('mobOverlay').classList.toggle('show');
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+  setMobileSidebarOpen(!sidebar.classList.contains('open'));
 }
 function closeMobileSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('mobOverlay').classList.remove('show');
+  setMobileSidebarOpen(false);
 }
 document.getElementById('mobOverlay').addEventListener('click', closeMobileSidebar);
 
 function setSidebarState(collapsed) {
-  if (window.innerWidth <= 900) return;
+  if (isMobileViewport()) {
+    document.body.classList.remove('sidebar-collapsed');
+    const mobileBtn = document.getElementById('sidebarToggle');
+    if (mobileBtn) mobileBtn.setAttribute('aria-pressed', 'false');
+    return;
+  }
   document.body.classList.toggle('sidebar-collapsed', collapsed);
   const btn = document.getElementById('sidebarToggle');
   if (btn) btn.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
@@ -3006,15 +3025,23 @@ function toggleSidebar() {
 }
 
 function loadSidebarState() {
-  setSidebarState(true);
-  localStorage.setItem('ltSidebarCollapsed', '1');
+  const saved = localStorage.getItem('ltSidebarCollapsed');
+  const collapsed = saved === null ? true : saved === '1';
+  setSidebarState(collapsed);
 }
 
-window.addEventListener('resize', () => {
-  if (window.innerWidth <= 900) {
+function syncSidebarForViewport() {
+  if (isMobileViewport()) {
     document.body.classList.remove('sidebar-collapsed');
+    setMobileSidebarOpen(false);
+    const btn = document.getElementById('sidebarToggle');
+    if (btn) btn.setAttribute('aria-pressed', 'false');
+    return;
   }
-});
+  closeMobileSidebar();
+}
+
+window.addEventListener('resize', syncSidebarForViewport);
 
 // ============================================================
 // INIT
@@ -3038,6 +3065,7 @@ window.addEventListener('resize', () => {
   const initialProductSlug = getProductSlugFromUrl();
 
   loadSidebarState();
+  syncSidebarForViewport();
   setStorefrontMode(storefrontMode, { preserveCategory: true });
   loadStoreSettings();
   loadCustomCategoryState();

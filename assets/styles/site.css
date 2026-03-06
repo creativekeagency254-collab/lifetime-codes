@@ -503,6 +503,9 @@ tbody td{padding:11px 14px;font-size:13px;color:var(--text2);vertical-align:midd
 .mob-overlay{display:none;position:fixed;inset:0;background:rgba(17,24,39,.4);z-index:9}
 
 @media(max-width:900px){
+  body.mobile-sidebar-open{
+    overflow:hidden;
+  }
   .app-outer{padding:0}
   .app-card{border-radius:0;min-height:100vh}
   .sidebar{position:fixed;top:0;left:0;height:100vh;z-index:100;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
