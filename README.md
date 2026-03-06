@@ -29,13 +29,19 @@ Then open:
 2. Run the SQL from `supabase-schema.sql`.
 3. Refresh the website/admin dashboard.
 
-If dashboard shows `Schema Missing`:
+If dashboard shows `Schema Missing` or `Schema Update Needed`:
 
 1. Open Admin -> `Settings & Images`.
 2. In `Supabase Setup Wizard`, click `Copy Schema SQL`.
 3. Click `Open SQL Editor`, paste and run.
 4. Return to admin and click `Recheck Schema`.
-5. Optional: click `Seed Products` to load the starter catalog into Supabase.
+5. Optional: click `Seed Products` to load starter catalog, or `Sync Current Catalog` to upsert all current products.
+
+Supabase credentials can be updated in Admin -> `Store Configuration`:
+
+1. Set `Supabase URL`.
+2. Set `Supabase Publishable / Anon Key` (never use `sb_secret` or `service_role` in browser).
+3. Click `Save Settings` and the page reloads automatically to apply new credentials.
 
 ## Deploy to Vercel
 

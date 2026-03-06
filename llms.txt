@@ -36,3 +36,20 @@ Primary currency: KES
 - Catalog management for electronics and jewelry scopes
 - Product image URL support with normalization
 - Banner and category image controls
+- Footer admin entry label: `Shemi` (opens admin access panel)
+
+## Footer Navigation
+- Shop: Mobile Collection, Computing Hub, Wearables Corner, Audio Lounge, Tablet Center, Kitchen Tech, Gaming Arena, Jewelry Picks, Necklace Studio
+- Support: Track Order, Returns Policy, Warranty Info, Contact Us, FAQs
+- Company: About Us, Careers, Press, Partners, Privacy Policy
+
+## Mini Blog Topics
+- Smartphone buying guide
+- Laptop checklist guide
+- Jewelry care guide
+- Gaming setup tips
+
+## Support Actions
+- Track order routes users to checkout timeline
+- Contact support routes users to WhatsApp support
+- Returns, warranty, FAQs, and company links update the footer blog/about panel with guidance

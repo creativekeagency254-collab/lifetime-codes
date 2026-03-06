@@ -1,11 +1,31 @@
 ﻿// ============================================================
 // CONFIG — All keys for testing environment
 // ============================================================
+const savedBootSettings = (() => {
+  if (typeof window === 'undefined' || !window.localStorage) return null;
+  try {
+    return JSON.parse(window.localStorage.getItem('ltl2_store_settings') || 'null');
+  } catch (_) {
+    return null;
+  }
+})();
+const savedBootSupabase = (savedBootSettings && typeof savedBootSettings.supabase === 'object')
+  ? savedBootSettings.supabase
+  : {};
+const runtimeBootConfig = (typeof window !== 'undefined' && window.__LIFETIME_CONFIG && typeof window.__LIFETIME_CONFIG === 'object')
+  ? window.__LIFETIME_CONFIG
+  : {};
+
 const CFG = {
   ENABLE_SUPABASE:  true,
-  SUPABASE_URL:     'https://fbulitfyarmnyegxduqy.supabase.co',
-  SUPABASE_PUBLISHABLE: 'sb_publishable_h5pygvIpbj6JaQwCiAnMSw_0MXm8Z7Q',
-  SUPABASE_ANON:    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZidWxpdGZ5YXJtbnllZ3hkdXF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjE5MDAsImV4cCI6MjA4Nzc5NzkwMH0.K5UwbTYttPQeK4DTx1AO_CzPWg6IuOx4_zTbQcYEWts',
+  SUPABASE_URL:     String(runtimeBootConfig.supabaseUrl || savedBootSupabase.url || 'https://fbulitfyarmnyegxduqy.supabase.co').trim(),
+  SUPABASE_PUBLISHABLE: String(
+    runtimeBootConfig.supabasePublishable
+      || savedBootSupabase.publishable
+      || savedBootSupabase.key
+      || 'sb_publishable_h5pygvIpbj6JaQwCiAnMSw_0MXm8Z7Q'
+  ).trim(),
+  SUPABASE_ANON:    String(runtimeBootConfig.supabaseAnon || savedBootSupabase.anon || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZidWxpdGZ5YXJtbnllZ3hkdXF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjE5MDAsImV4cCI6MjA4Nzc5NzkwMH0.K5UwbTYttPQeK4DTx1AO_CzPWg6IuOx4_zTbQcYEWts').trim(),
   PAYSTACK_PK:      'pk_test_69283fe06fedab5b485efdae233a92be25d77c6b',
   WHATSAPP:         '0705925800',
   ADMIN_EMAIL:      'admin@gmail.com',
@@ -13,6 +33,7 @@ const CFG = {
 };
 const SUPABASE_PROJECT_REF = 'fbulitfyarmnyegxduqy';
 const SUPABASE_SQL_EDITOR_URL = `https://supabase.com/dashboard/project/${SUPABASE_PROJECT_REF}/sql/new`;
+const PAYSTACK_INLINE_SRC = 'https://js.paystack.co/v1/inline.js';
 
 function normalizeWhatsAppNumber(rawNumber) {
   const digits = String(rawNumber || '').replace(/\D/g, '');
@@ -26,6 +47,56 @@ function normalizeWhatsAppNumber(rawNumber) {
 function getWhatsAppLink(encodedText) {
   const phone = normalizeWhatsAppNumber(CFG.WHATSAPP);
   return encodedText ? `https://wa.me/${phone}?text=${encodedText}` : `https://wa.me/${phone}`;
+}
+
+function hasValidPaystackKey() {
+  return /^pk_(test|live)_/i.test(String(CFG.PAYSTACK_PK || '').trim());
+}
+
+function hasPaystackInline() {
+  return !!(window.PaystackPop && typeof window.PaystackPop.setup === 'function');
+}
+
+let paystackLoadPromise = null;
+function ensurePaystackLoaded() {
+  if (hasPaystackInline()) return Promise.resolve(true);
+  if (paystackLoadPromise) return paystackLoadPromise;
+
+  paystackLoadPromise = new Promise((resolve, reject) => {
+    let done = false;
+    const finish = (ok, error) => {
+      if (done) return;
+      done = true;
+      if (ok) resolve(true);
+      else reject(error || new Error('Paystack script unavailable'));
+    };
+    const finalizeCheck = () => {
+      if (hasPaystackInline()) finish(true);
+      else finish(false, new Error('Paystack script loaded but API is missing'));
+    };
+
+    const existing = document.querySelector(`script[src="${PAYSTACK_INLINE_SRC}"]`);
+    if (existing) {
+      existing.addEventListener('load', finalizeCheck, { once: true });
+      existing.addEventListener('error', () => finish(false, new Error('Paystack script failed to load')), { once: true });
+      window.setTimeout(finalizeCheck, 2500);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = PAYSTACK_INLINE_SRC;
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    script.onload = finalizeCheck;
+    script.onerror = () => finish(false, new Error('Paystack script failed to load'));
+    document.head.appendChild(script);
+    window.setTimeout(finalizeCheck, 3500);
+  }).then(() => true).catch((error) => {
+    paystackLoadPromise = null;
+    throw error;
+  });
+
+  return paystackLoadPromise;
 }
 
 function decodeUrlSafe(value) {
@@ -132,16 +203,61 @@ function escapeHtml(value) {
 // ============================================================
 // SUPABASE CLIENT
 // ============================================================
+function decodeJwtPayloadSegment(token) {
+  if (!/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(String(token || ''))) return null;
+  try {
+    const payload = String(token).split('.')[1];
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+    return JSON.parse(atob(padded));
+  } catch (_) {
+    return null;
+  }
+}
+
+function isSupabaseServiceRoleKey(rawKey) {
+  const key = String(rawKey || '').trim();
+  if (!key) return false;
+  if (/^sb_secret_/i.test(key)) return true;
+  if (/service_role/i.test(key)) return true;
+  const payload = decodeJwtPayloadSegment(key);
+  return String(payload?.role || '').toLowerCase() === 'service_role';
+}
+
+function isLikelySupabaseClientKey(rawKey) {
+  const key = String(rawKey || '').trim();
+  if (!key) return false;
+  return /^sb_publishable_/i.test(key) || /^eyJ[A-Za-z0-9_-]*\./.test(key);
+}
+
+function resolveSupabaseClientKey() {
+  const candidates = [CFG.SUPABASE_PUBLISHABLE, CFG.SUPABASE_ANON];
+  for (const candidate of candidates) {
+    const key = String(candidate || '').trim();
+    if (!key) continue;
+    if (isSupabaseServiceRoleKey(key)) continue;
+    if (isLikelySupabaseClientKey(key)) return key;
+  }
+  return '';
+}
+
 const createClient = (typeof window !== 'undefined' && window.supabase && typeof window.supabase.createClient === 'function')
   ? window.supabase.createClient
   : null;
 const sbUrl = String(CFG.SUPABASE_URL || '').trim();
-const sbKey = String(CFG.SUPABASE_PUBLISHABLE || CFG.SUPABASE_ANON || '').trim();
+const sbKey = resolveSupabaseClientKey();
 const sb = (CFG.ENABLE_SUPABASE && createClient && sbUrl && sbKey)
   ? createClient(sbUrl, sbKey, {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     })
   : null;
+const sbConfigIssue = (() => {
+  if (!CFG.ENABLE_SUPABASE) return '';
+  if (!createClient) return 'Supabase SDK could not load from CDN.';
+  if (!sbUrl) return 'Supabase URL is missing.';
+  if (!sbKey) return 'Supabase key missing or invalid. Use publishable/anon key only.';
+  return '';
+})();
 // Never use Supabase service-role/secret keys in browser code.
 const sbAdmin = sb;
 
@@ -211,6 +327,28 @@ const DEFAULT_BRANDING_STATE = {
     support: false,
   },
 };
+const DEFAULT_MARQUEE_IMAGES = {
+  electronics: [
+    'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1400&q=90',
+    'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=1400&q=90',
+    'https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=1400&q=90',
+    'https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=1400&q=90',
+    'https://images.unsplash.com/photo-1585060544812-6b45742d762f?auto=format&fit=crop&w=1400&q=90',
+    'https://images.unsplash.com/photo-1512499617640-c74ae3a79d37?auto=format&fit=crop&w=1400&q=90',
+  ],
+  jewerlys: [
+    'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=1400&q=90',
+    'https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?auto=format&fit=crop&w=1400&q=90',
+    'https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?auto=format&fit=crop&w=1400&q=90',
+    'https://images.unsplash.com/photo-1602752275500-3f7f295b1cf7?auto=format&fit=crop&w=1400&q=90',
+    'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=1400&q=90',
+    'https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=1400&q=90',
+  ],
+};
+const MARQUEE_ICON_CATEGORIES = {
+  electronics: ['smartphones', 'laptops', 'watches', 'audio', 'tablets', 'smart-home', 'gaming', 'kitchen-accessories'],
+  jewerlys: ['jewerlys', 'jewelry-necklaces', 'jewelry-rings', 'jewelry-bracelets', 'jewelry-earrings', 'jewelry-watches'],
+};
 
 // ============================================================
 // STATE
@@ -240,10 +378,15 @@ let supabaseHealth = {
   productsTable: false,
   ordersTable: false,
   schemaMissing: false,
+  schemaOutdated: false,
 };
 let brandingState = {
   preset: DEFAULT_BRANDING_STATE.preset,
   additions: { ...DEFAULT_BRANDING_STATE.additions },
+};
+let marqueeImageState = {
+  electronics: [...DEFAULT_MARQUEE_IMAGES.electronics],
+  jewerlys: [...DEFAULT_MARQUEE_IMAGES.jewerlys],
 };
 
 function setDbStatus(label, color) {
@@ -256,31 +399,37 @@ function setDbStatus(label, color) {
 function updateSupabaseSetupUi(message = '') {
   const msg = document.getElementById('supabaseSetupMsg');
   const seedBtn = document.getElementById('btnSeedSupabaseProducts');
+  const syncBtn = document.getElementById('btnSyncSupabaseProducts');
   const applyBtn = document.getElementById('btnOpenSupabaseEditor');
   const copyBtn = document.getElementById('btnCopySupabaseSchema');
   const checkBtn = document.getElementById('btnCheckSupabaseSchema');
   if (!msg) return;
 
   if (!canUseSupabase()) {
-    msg.textContent = 'Supabase client unavailable. Check URL/key configuration first.';
+    msg.textContent = sbConfigIssue || 'Supabase client unavailable. Check URL/key configuration first.';
     if (seedBtn) seedBtn.disabled = true;
+    if (syncBtn) syncBtn.disabled = true;
     if (applyBtn) applyBtn.disabled = false;
     if (copyBtn) copyBtn.disabled = false;
     if (checkBtn) checkBtn.disabled = true;
     return;
   }
 
+  const hasSchemaProblem = !!(supabaseHealth.schemaMissing || supabaseHealth.schemaOutdated);
   if (message) {
     msg.textContent = message;
-  } else if (supabaseHealth.schemaMissing) {
-    msg.textContent = 'Schema missing in Supabase. Open SQL Editor, run supabase-schema.sql, then recheck.';
+  } else if (hasSchemaProblem) {
+    msg.textContent = supabaseHealth.schemaOutdated
+      ? 'Schema is outdated. Run the latest supabase-schema.sql in SQL Editor, then recheck.'
+      : 'Schema missing in Supabase. Open SQL Editor, run supabase-schema.sql, then recheck.';
   } else if (supabaseHealth.productsTable && supabaseHealth.ordersTable) {
     msg.textContent = 'Schema looks ready. You can seed products if your catalog is still empty.';
   } else {
     msg.textContent = 'Checking schema health...';
   }
 
-  if (seedBtn) seedBtn.disabled = !!supabaseHealth.schemaMissing;
+  if (seedBtn) seedBtn.disabled = hasSchemaProblem;
+  if (syncBtn) syncBtn.disabled = hasSchemaProblem;
   if (applyBtn) applyBtn.disabled = false;
   if (copyBtn) copyBtn.disabled = false;
   if (checkBtn) checkBtn.disabled = false;
@@ -307,7 +456,26 @@ function isTransientDbError(error) {
 function isSchemaMissingError(error) {
   const code = String(error?.code || '').toUpperCase();
   const msg = String(error?.message || '').toLowerCase();
-  return code === 'PGRST205' || msg.includes('could not find the table');
+  return (
+    code === 'PGRST205' ||
+    code === '42P01' ||
+    msg.includes('could not find the table') ||
+    (msg.includes('relation') && msg.includes('does not exist'))
+  );
+}
+
+function isSchemaOutdatedError(error) {
+  const code = String(error?.code || '').toUpperCase();
+  const msg = String(error?.message || '').toLowerCase();
+  return (
+    code === 'PGRST204' ||
+    code === '42703' ||
+    (msg.includes('column') && msg.includes('does not exist'))
+  );
+}
+
+function isSchemaProblemError(error) {
+  return isSchemaMissingError(error) || isSchemaOutdatedError(error);
 }
 
 function wait(ms) {
@@ -375,25 +543,34 @@ async function runSupabaseWrite(factoryFn, options = {}) {
     await runDbWithRetry(factoryFn, { retries: 1, baseDelayMs: 250 });
     setDbStatus('Connected', 'var(--green)');
     dbOnline = true;
-    if (supabaseHealth.schemaMissing) {
-      supabaseHealth = { productsTable: true, ordersTable: true, schemaMissing: false };
+    if (supabaseHealth.schemaMissing || supabaseHealth.schemaOutdated) {
+      supabaseHealth = { productsTable: true, ordersTable: true, schemaMissing: false, schemaOutdated: false };
       updateSupabaseSetupUi('Schema appears ready. You can continue syncing data.');
     }
     return true;
   } catch (error) {
     console.warn('Supabase write failed:', error?.message || error);
     const schemaMissing = isSchemaMissingError(error);
-    setDbStatus(schemaMissing ? 'Schema Missing' : 'Sync Issue', schemaMissing ? 'var(--red)' : 'var(--amber)');
-    if (schemaMissing) {
-      supabaseHealth = { productsTable: false, ordersTable: false, schemaMissing: true };
-      updateSupabaseSetupUi('Schema missing in Supabase. Run supabase-schema.sql, then recheck.');
+    const schemaOutdated = isSchemaOutdatedError(error);
+    const schemaIssue = schemaMissing || schemaOutdated;
+    setDbStatus(
+      schemaIssue ? (schemaOutdated ? 'Schema Update Needed' : 'Schema Missing') : 'Sync Issue',
+      schemaIssue ? 'var(--red)' : 'var(--amber)'
+    );
+    if (schemaIssue) {
+      supabaseHealth = { productsTable: false, ordersTable: false, schemaMissing, schemaOutdated };
+      updateSupabaseSetupUi(
+        schemaOutdated
+          ? 'Schema is outdated. Run latest supabase-schema.sql, then recheck.'
+          : 'Schema missing in Supabase. Run supabase-schema.sql, then recheck.'
+      );
     }
     dbOnline = false;
     if (!silent) {
-      const message = schemaMissing
-        ? 'Run supabase-schema.sql in Supabase SQL Editor, then refresh.'
+      const message = schemaIssue
+        ? 'Run the latest supabase-schema.sql in Supabase SQL Editor, then refresh.'
         : fallbackNotice;
-      toast('inf', schemaMissing ? 'Supabase Schema Missing' : 'Supabase Sync Issue', message);
+      toast('inf', schemaIssue ? 'Supabase Schema Issue' : 'Supabase Sync Issue', message);
     }
     return false;
   }
@@ -401,15 +578,16 @@ async function runSupabaseWrite(factoryFn, options = {}) {
 
 async function checkSupabaseHealth(showToast = false) {
   if (!canUseSupabase()) {
-    supabaseHealth = { productsTable: false, ordersTable: false, schemaMissing: true };
-    updateSupabaseSetupUi('Supabase client unavailable. Check URL/key and internet connection.');
-    if (showToast) toast('err', 'Supabase Not Ready', 'Client is not initialized.');
+    supabaseHealth = { productsTable: false, ordersTable: false, schemaMissing: false, schemaOutdated: false };
+    updateSupabaseSetupUi(sbConfigIssue || 'Supabase client unavailable. Check URL/key and internet connection.');
+    if (showToast) toast('err', 'Supabase Not Ready', sbConfigIssue || 'Client is not initialized.');
     return supabaseHealth;
   }
 
   let productsTable = false;
   let ordersTable = false;
   let schemaMissing = false;
+  let schemaOutdated = false;
   let lastError = null;
 
   try {
@@ -419,6 +597,7 @@ async function checkSupabaseHealth(showToast = false) {
   } catch (error) {
     lastError = error;
     if (isSchemaMissingError(error)) schemaMissing = true;
+    if (isSchemaOutdatedError(error)) schemaOutdated = true;
   }
 
   try {
@@ -428,14 +607,19 @@ async function checkSupabaseHealth(showToast = false) {
   } catch (error) {
     lastError = error;
     if (isSchemaMissingError(error)) schemaMissing = true;
+    if (isSchemaOutdatedError(error)) schemaOutdated = true;
   }
 
-  supabaseHealth = { productsTable, ordersTable, schemaMissing };
+  supabaseHealth = { productsTable, ordersTable, schemaMissing, schemaOutdated };
 
-  if (schemaMissing) {
-    setDbStatus('Schema Missing', 'var(--red)');
-    updateSupabaseSetupUi('Schema missing in Supabase. Run supabase-schema.sql, then click Recheck Schema.');
-    if (showToast) toast('err', 'Supabase Schema Missing', 'Open SQL Editor, run supabase-schema.sql, then Recheck.');
+  if (schemaMissing || schemaOutdated) {
+    setDbStatus(schemaOutdated ? 'Schema Update Needed' : 'Schema Missing', 'var(--red)');
+    updateSupabaseSetupUi(
+      schemaOutdated
+        ? 'Schema is outdated. Run latest supabase-schema.sql, then click Recheck Schema.'
+        : 'Schema missing in Supabase. Run supabase-schema.sql, then click Recheck Schema.'
+    );
+    if (showToast) toast('err', 'Supabase Schema Issue', 'Open SQL Editor, run latest supabase-schema.sql, then Recheck.');
   } else if (productsTable && ordersTable) {
     setDbStatus('Connected', 'var(--green)');
     updateSupabaseSetupUi('Schema is ready. You can now sync and seed products.');
@@ -495,12 +679,12 @@ function mapFallbackToSupabaseProduct(product) {
 
 async function seedSupabaseProducts() {
   if (!canUseSupabase()) {
-    toast('err', 'Supabase Not Ready', 'Client is not initialized.');
+    toast('err', 'Supabase Not Ready', sbConfigIssue || 'Client is not initialized.');
     return;
   }
   const health = await checkSupabaseHealth(false);
-  if (health.schemaMissing) {
-    toast('err', 'Schema Missing', 'Run supabase-schema.sql first, then seed products.');
+  if (health.schemaMissing || health.schemaOutdated) {
+    toast('err', 'Schema Issue', 'Run the latest supabase-schema.sql first, then seed products.');
     return;
   }
 
@@ -527,6 +711,111 @@ async function seedSupabaseProducts() {
   } catch (error) {
     toast('err', 'Seed Failed', error?.message || 'Could not seed products.');
   }
+}
+
+async function syncAllProductsToSupabase() {
+  if (!canUseSupabase()) {
+    toast('err', 'Supabase Not Ready', sbConfigIssue || 'Client is not initialized.');
+    return;
+  }
+  const health = await checkSupabaseHealth(false);
+  if (health.schemaMissing || health.schemaOutdated) {
+    toast('err', 'Schema Issue', 'Run the latest supabase-schema.sql before syncing catalog.');
+    return;
+  }
+
+  const sourceProducts = Array.isArray(products) && products.length ? products : FALLBACK_PRODUCTS;
+  const payload = sourceProducts.map(mapFallbackToSupabaseProduct);
+  if (!payload.length) {
+    toast('inf', 'No Products', 'There are no products to sync right now.');
+    return;
+  }
+
+  const synced = await runSupabaseWrite(
+    async () => {
+      const { error } = await sbAdmin.from('products').upsert(payload, { onConflict: 'slug' });
+      if (error) throw error;
+      return { data: payload };
+    },
+    { silent: true, fallbackNotice: 'Could not sync catalog to Supabase. Try again.' }
+  );
+
+  if (!synced) {
+    toast('inf', 'Sync Incomplete', 'Catalog stayed local. Retry after your connection is stable.');
+    return;
+  }
+
+  toast('ok', 'Catalog Synced', `${payload.length} products synced to Supabase.`);
+  await loadProducts();
+  if (adminAuth) renderAdminProducts();
+  await checkSupabaseHealth(false);
+}
+
+async function seedJewelryDemoProducts() {
+  const seedTemplates = FALLBACK_PRODUCTS.filter((p) => isJewelryCategory(p.category)).slice(0, 6);
+  if (!seedTemplates.length) {
+    toast('err', 'No Jewelry Templates', 'Could not find jewelry seed products.');
+    return;
+  }
+
+  const existingJewelryCount = products.filter((p) => isJewelryCategory(p.category)).length;
+  if (existingJewelryCount > 0 && !confirm(`You already have ${existingJewelryCount} jewelry products. Add ${seedTemplates.length} more demo items?`)) {
+    return;
+  }
+
+  const stamp = Date.now().toString(36);
+  const knownSlugs = new Set(products.map((p) => String(p.slug || '').toLowerCase()).filter(Boolean));
+  const seededProducts = seedTemplates.map((template, idx) => {
+    const baseSlug = normalizeCategoryValue(template.slug || template.name || `jewelry-item-${idx + 1}`) || `jewelry-item-${idx + 1}`;
+    let slug = `${baseSlug}-demo-${stamp}-${idx + 1}`;
+    while (knownSlugs.has(slug)) slug = `${slug}-x`;
+    knownSlugs.add(slug);
+    return {
+      ...template,
+      id: `jw-demo-${stamp}-${idx + 1}`,
+      slug,
+      active: true,
+      images: Array.isArray(template.images) ? [...template.images] : [],
+      variants: Array.isArray(template.variants) ? [...template.variants] : [],
+      highlights: Array.isArray(template.highlights) ? [...template.highlights] : [],
+      specs: template.specs && typeof template.specs === 'object' ? { ...template.specs } : {},
+    };
+  });
+
+  products = [...seededProducts, ...products];
+
+  let dbSynced = !canUseSupabase();
+  let insertedRows = [];
+  if (canUseSupabase()) {
+    const payload = seededProducts.map(mapFallbackToSupabaseProduct);
+    dbSynced = await runSupabaseWrite(
+      async () => {
+        const { data, error } = await sbAdmin.from('products').insert(payload).select();
+        if (error) throw error;
+        insertedRows = Array.isArray(data) ? data : [];
+        return { data };
+      },
+      { silent: true }
+    );
+    if (dbSynced && insertedRows.length) {
+      const bySlug = new Map(insertedRows.map((row) => [String(row.slug || '').toLowerCase(), row]));
+      seededProducts.forEach((product) => {
+        const row = bySlug.get(String(product.slug || '').toLowerCase());
+        if (row?.id) product.id = row.id;
+      });
+    }
+  }
+
+  renderAdminProducts();
+  renderCategoryChips();
+  if (!getAllowedFilterCategories().includes(currentCat)) currentCat = storefrontMode === 'jewerlys' ? 'jewerlys' : 'all';
+  setCat(currentCat, { closeSidebar: false });
+  updateAdminStats();
+
+  if (canUseSupabase() && !dbSynced) {
+    toast('inf', 'Supabase Sync Issue', 'Jewelry samples added locally but not synced to Supabase yet.');
+  }
+  toast('ok', 'Jewelry Samples Added', `${seededProducts.length} sample jewelry products added. You can delete them from Admin.`);
 }
 
 // ============================================================
@@ -686,6 +975,64 @@ const CATEGORY_SEO_COPY = {
     title: 'Jewelry Watches',
     description: 'Shop jewelry watches that blend fashion styling with everyday practicality.',
     keywords: 'jewelry watches Kenya, fashion watches Kenya',
+  },
+};
+const FOOTER_INFO_CONTENT = {
+  'about-us': {
+    title: 'About Life Time Technology Store',
+    text: 'Life Time Technology Store is a Nairobi-based team curating premium electronics and jewelry. We focus on authentic products, transparent pricing, and assisted customer support.',
+  },
+  careers: {
+    title: 'Careers',
+    text: 'We welcome people in sales, fulfillment, customer support, and e-commerce operations. Share your profile with us through support for future openings.',
+  },
+  press: {
+    title: 'Press',
+    text: 'For media requests, interviews, and product launch coverage, contact our support desk and include your publication details.',
+  },
+  partners: {
+    title: 'Partners',
+    text: 'We collaborate with trusted brands, distributors, and logistics partners to keep quality and delivery standards high across Kenya.',
+  },
+  'privacy-policy': {
+    title: 'Privacy Policy',
+    text: 'We use customer data only for order processing, delivery updates, payment verification, and support. We do not sell customer data to third parties.',
+  },
+  'returns-policy': {
+    title: 'Returns Policy',
+    text: 'If an item is damaged, incorrect, or not as expected, contact support promptly with your order number. Our team will guide you through replacement or return steps.',
+  },
+  'warranty-info': {
+    title: 'Warranty Info',
+    text: 'Eligible products include supplier or manufacturer warranty support. Keep your order confirmation and serial details for faster warranty assistance.',
+  },
+  faqs: {
+    title: 'FAQs',
+    text: 'Common answers: delivery timelines vary by region, payment is secured by Paystack/M-Pesa, and orders can be assisted via WhatsApp support.',
+  },
+  'blog-smartphones': {
+    title: 'Blog: Smartphone Buying Guide',
+    text: 'Compare display quality, camera sensors, chipset generation, battery health, and update support before choosing your next phone.',
+    category: 'smartphones',
+    query: 'buying guide camera battery chipset',
+  },
+  'blog-laptops': {
+    title: 'Blog: Laptop Checklist Guide',
+    text: 'For laptops, prioritize CPU class, RAM upgrade path, SSD speed, thermal design, and battery endurance based on your workload.',
+    category: 'laptops',
+    query: 'laptop checklist performance battery display',
+  },
+  'blog-jewelry': {
+    title: 'Blog: Jewelry Care Guide',
+    text: 'Store jewelry dry, avoid chemical sprays, clean gently with soft cloth, and separate pieces to protect finish and clasp quality.',
+    category: 'jewerlys',
+    query: 'jewelry care guide',
+  },
+  'blog-gaming': {
+    title: 'Blog: Gaming Setup Tips',
+    text: 'Build a stable gaming setup with low-latency display, reliable controller response, cooling airflow, and power-safe accessories.',
+    category: 'gaming',
+    query: 'gaming setup guide accessories',
   },
 };
 
@@ -948,6 +1295,18 @@ function buildDynamicSchema(context) {
           },
         ],
       },
+      {
+        '@type': 'AboutPage',
+        name: 'About Life Time Technology Store',
+        description: 'Nairobi-based electronics and jewelry store focused on quality products and guided support.',
+        url: `${SEO_BASE_URL}/#footerMiniBlog`,
+      },
+      {
+        '@type': 'Blog',
+        name: 'Life Time Tech Buyer Guides',
+        description: 'Short buying and care guides for smartphones, laptops, gaming, and jewelry in Kenya.',
+        url: `${SEO_BASE_URL}/#footerMiniBlog`,
+      },
     ],
   };
 }
@@ -1071,6 +1430,7 @@ function setStorefrontMode(mode, opts = {}) {
   const tgJewerlys = document.getElementById('tgJewerlys');
   if (tgElectronics) tgElectronics.classList.toggle('active', storefrontMode === 'electronics');
   if (tgJewerlys) tgJewerlys.classList.toggle('active', storefrontMode === 'jewerlys');
+  renderImageMarquee(storefrontMode);
   if (!preserveCategory) return;
   if (storefrontMode === 'jewerlys' && !isJewelryCategory(currentCat)) currentCat = 'jewerlys';
   if (storefrontMode === 'electronics' && isJewelryCategory(currentCat)) currentCat = 'all';
@@ -1104,8 +1464,9 @@ async function loadProducts() {
   if (!canUseSupabase()) {
     products = FALLBACK_PRODUCTS;
     dbOnline = false;
-    const statusLabel = CFG.ENABLE_SUPABASE ? 'Offline / Demo' : 'Demo Mode';
-    setDbStatus(statusLabel, 'var(--amber)');
+    const hasConfigIssue = !!(CFG.ENABLE_SUPABASE && sbConfigIssue);
+    const statusLabel = CFG.ENABLE_SUPABASE ? (hasConfigIssue ? 'Config Issue' : 'Offline / Demo') : 'Demo Mode';
+    setDbStatus(statusLabel, hasConfigIssue ? 'var(--red)' : 'var(--amber)');
     updateTopbarStats();
     renderCategoryChips();
     if (!getAllowedFilterCategories().includes(currentCat)) currentCat = storefrontMode === 'jewerlys' ? 'jewerlys' : 'all';
@@ -1129,9 +1490,9 @@ async function loadProducts() {
     console.warn('Supabase error:', e.message);
     products = FALLBACK_PRODUCTS;
     dbOnline = false;
-    if (isSchemaMissingError(e)) {
-      setDbStatus('Schema Missing', 'var(--red)');
-      toast('inf', 'Supabase Schema Missing', 'Run supabase-schema.sql in Supabase SQL Editor, then refresh.');
+    if (isSchemaProblemError(e)) {
+      setDbStatus('Schema Issue', 'var(--red)');
+      toast('inf', 'Supabase Schema Issue', 'Run latest supabase-schema.sql in SQL Editor, then refresh.');
     } else {
       setDbStatus('Offline / Demo', 'var(--amber)');
     }
@@ -1159,10 +1520,10 @@ async function loadAdminOrders() {
   } catch(e) {
     console.warn('Supabase orders load failed:', e.message);
     dbOnline = false;
-    setDbStatus(isSchemaMissingError(e) ? 'Schema Missing' : 'Sync Issue', isSchemaMissingError(e) ? 'var(--red)' : 'var(--amber)');
+    setDbStatus(isSchemaProblemError(e) ? 'Schema Issue' : 'Sync Issue', isSchemaProblemError(e) ? 'var(--red)' : 'var(--amber)');
     orders = JSON.parse(localStorage.getItem('ltl2_orders') || '[]');
     renderOrdersTable();
-    if (isSchemaMissingError(e)) toast('inf','Supabase Schema Missing','Run supabase-schema.sql in Supabase SQL Editor.');
+    if (isSchemaProblemError(e)) toast('inf','Supabase Schema Issue','Run latest supabase-schema.sql in Supabase SQL Editor.');
     else toast('inf','Using Local Orders','Supabase orders table may not exist yet');
   }
 }
@@ -1198,7 +1559,7 @@ function renderProducts(list) {
   grid.innerHTML = list.map(p => {
     const disc = p.original_price ? Math.round((1 - p.price/p.original_price)*100) : 0;
     const inWish = wishlist.includes(String(p.id));
-    const img = p.images && p.images.length ? `<img src="${p.images[0]}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'"/>` : `<div class="icon-placeholder">${catIcon(p.category)}</div>`;
+    const img = p.images && p.images.length ? `<img src="${p.images[0]}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'"/>` : '';
     const catLabel = cardCategoryLabel(p.category);
     const tagline = String(p.tagline || '').trim();
     return `<div class="p-card p-card-wide" role="button" tabindex="0" aria-label="Open ${escapeHtml(p.name)} details" onclick="openProduct('${p.id}')" onkeydown="handleProductCardKeydown(event,'${p.id}')">
@@ -1214,7 +1575,6 @@ function renderProducts(list) {
           <div class="p-card-name">${p.name}</div>
           ${tagline ? `<div class="p-card-tagline">${tagline}</div>` : ''}
           <div class="p-card-meta">
-            <span class="p-card-meta-icon">${catIcon(p.category)}</span>
             <span>${catLabel}</span>
           </div>
           <div class="p-card-footer">
@@ -1269,6 +1629,9 @@ function setCat(cat, opts = {}) {
 }
 
 function doSearch(q) {
+  const searchEl = document.getElementById('searchInput');
+  const isUserSearchFocus = document.activeElement === searchEl;
+  if (currentPage !== 'explore' && !isUserSearchFocus) return;
   const query = q.trim().toLowerCase();
   if (currentPage !== 'explore') navigate('explore');
   currentPage = 'explore';
@@ -1657,12 +2020,12 @@ function renderCkStep() {
         No account needed. Your email is only used for your order confirmation and invoice.
       </div>
       <div class="form-grid-2">
-        <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="ck2Name" value="${ckData.name||''}" placeholder="John Doe"/></div>
-        <div class="form-group"><label class="form-label">Email <span class="req">*</span></label><input type="email" class="form-input" id="ck2Email" value="${ckData.email||''}" placeholder="john@email.com" required/></div>
-        <div class="form-group"><label class="form-label">Phone (M-Pesa / WhatsApp)</label><input type="tel" class="form-input" id="ck2Phone" value="${ckData.phone||''}" placeholder="0700 000 000"/></div>
+        <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="ck2Name" name="name" autocomplete="name" value="${ckData.name||''}" placeholder="John Doe"/></div>
+        <div class="form-group"><label class="form-label">Email <span class="req">*</span></label><input type="email" class="form-input" id="ck2Email" name="email" autocomplete="email" value="${ckData.email||''}" placeholder="john@email.com" required/></div>
+        <div class="form-group"><label class="form-label">Phone (M-Pesa / WhatsApp)</label><input type="tel" class="form-input" id="ck2Phone" name="tel" autocomplete="tel" value="${ckData.phone||''}" placeholder="0700 000 000"/></div>
         <div class="form-group"><label class="form-label">Delivery Area</label><input class="form-input" value="${ckData.deliveryZone ? ckData.deliveryZone.split('|')[0] : ''}" readonly style="background:var(--bg);"/></div>
       </div>
-      <div class="form-group"><label class="form-label">Street Address / Building / Landmark</label><input class="form-input" id="ck2Address" value="${ckData.address||''}" placeholder="e.g. Nextgen Mall, 3rd Floor"/></div>
+      <div class="form-group"><label class="form-label">Street Address / Building / Landmark</label><input class="form-input" id="ck2Address" name="street-address" autocomplete="street-address" value="${ckData.address||''}" placeholder="e.g. Nextgen Mall, 3rd Floor"/></div>
       <div class="ck-nav-row">
         <button class="btn-cta outline" style="width:auto;padding:11px 20px;" onclick="ckBack()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><polyline points="15 18 9 12 15 6"/></svg>
@@ -1827,8 +2190,23 @@ async function processPayment() {
     window.open(getWhatsAppLink(msg), '_blank');
     completeOrder(orderNum, 'WhatsApp');
   } else {
+    if (!hasValidPaystackKey()) {
+      toast('err', 'Payment Error', 'Paystack key is missing or invalid in settings.');
+      return;
+    }
+    let paystackReady = false;
     try {
-      const handler = PaystackPop.setup({
+      paystackReady = await ensurePaystackLoaded();
+    } catch (error) {
+      console.warn('Paystack load error:', error?.message || error);
+      paystackReady = false;
+    }
+    if (!paystackReady) {
+      toast('err', 'Payment Error', 'Paystack failed to load. Check internet/ad blocker and retry.');
+      return;
+    }
+    try {
+      const handler = window.PaystackPop.setup({
         key: CFG.PAYSTACK_PK,
         email: ckData.email,
         amount: total * 100,
@@ -1843,9 +2221,13 @@ async function processPayment() {
         },
         onClose: () => toast('inf','Payment cancelled','Your basket is saved')
       });
+      if (!handler || typeof handler.openIframe !== 'function') {
+        throw new Error('Paystack handler was not initialized');
+      }
       handler.openIframe();
     } catch(e) {
-      toast('err','Payment Error','Paystack could not load. Try WhatsApp instead.');
+      console.warn('Paystack init error:', e?.message || e);
+      toast('err', 'Payment Error', 'Paystack could not start. Retry payment or use WhatsApp.');
     }
   }
 }
@@ -2020,6 +2402,9 @@ function setAdminCatalogMode(mode, opts = {}) {
 
   const heading = document.getElementById('adminProductsHeading');
   if (heading) heading.textContent = adminCatalogMode === 'jewerlys' ? 'Jewelry Catalogue' : 'Electronics Catalogue';
+
+  const seedBtn = document.getElementById('btnSeedJewelryAdmin');
+  if (seedBtn) seedBtn.style.display = adminCatalogMode === 'jewerlys' ? 'inline-flex' : 'none';
 
   if (rerenderSettings) renderCategoryManagerCards(adminCatalogMode);
   if (rerenderProducts && document.getElementById('adminProducts')?.style.display !== 'none') renderAdminProducts();
@@ -2371,6 +2756,44 @@ function topbarToggle(mode) {
   }
 }
 
+function openFooterInfo(topic = 'about-us') {
+  const key = String(topic || 'about-us').trim().toLowerCase();
+
+  if (key === 'track-order') {
+    goCheckout();
+    return;
+  }
+  if (key === 'contact-us') {
+    const waMsg = encodeURIComponent('Hello, I need support with my order and product enquiry.');
+    window.open(getWhatsAppLink(waMsg), '_blank');
+    return;
+  }
+  if (key === 'shemi') {
+    openAdmin();
+    return;
+  }
+
+  const payload = FOOTER_INFO_CONTENT[key] || FOOTER_INFO_CONTENT['about-us'];
+  const titleEl = document.getElementById('footerBlogTitle');
+  const textEl = document.getElementById('footerBlogText');
+  if (titleEl) titleEl.textContent = payload.title;
+  if (textEl) textEl.textContent = payload.text;
+
+  if (payload.category) {
+    setCat(payload.category, { closeSidebar: false, preserveSearch: true });
+  }
+  if (payload.query) {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = payload.query;
+    doSearch(payload.query);
+  }
+
+  const blogCard = document.getElementById('footerMiniBlog');
+  if (blogCard && typeof blogCard.scrollIntoView === 'function') {
+    blogCard.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'nearest' });
+  }
+}
+
 // ============================================================
 // TOAST
 // ============================================================
@@ -2429,6 +2852,7 @@ window.addEventListener('resize', () => {
 // ============================================================
 (function bindConnectionRecovery() {
   window.addEventListener('online', () => {
+    ensurePaystackLoaded().catch(() => {});
     if (!canUseSupabase()) return;
     setDbStatus('Reconnecting...', 'var(--primary)');
     loadProducts();
@@ -2448,10 +2872,11 @@ window.addEventListener('resize', () => {
   setStorefrontMode(storefrontMode, { preserveCategory: true });
   loadStoreSettings();
   loadBrandingSettings();
+  ensurePaystackLoaded().catch(() => {});
   updateSupabaseSetupUi('Checking schema health...');
   if (CFG.ENABLE_SUPABASE && !sb) {
     setDbStatus('Config Issue', 'var(--red)');
-    toast('inf', 'Supabase Not Ready', 'Using local/demo data until Supabase client is available.');
+    toast('inf', 'Supabase Not Ready', sbConfigIssue || 'Using local/demo data until Supabase client is available.');
   }
   updateCartUI();
   updateWishlistBadge();
@@ -2475,39 +2900,35 @@ window.addEventListener('resize', () => {
 })();
 
 // ===== THEME SWITCHER =====
+function getThemeToggleIconSvg(theme) {
+  if (theme === 'dark') {
+    return '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5"/><path d="M12 19.5V22"/><path d="M4.93 4.93 6.7 6.7"/><path d="M17.3 17.3 19.07 19.07"/><path d="M2 12h2.5"/><path d="M19.5 12H22"/><path d="M4.93 19.07 6.7 17.3"/><path d="M17.3 6.7 19.07 4.93"/></svg>';
+  }
+  return '<svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 1 0 9.8 9.8z"/></svg>';
+}
+
+function syncThemeToggleUi(theme) {
+  const track = document.getElementById('tsTrack');
+  const icon = document.getElementById('themeIcon');
+  const label = document.getElementById('themeLabel');
+  if (track) track.classList.toggle('on', theme === 'dark');
+  if (icon) icon.innerHTML = getThemeToggleIconSvg(theme);
+  if (label) label.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+}
+
 function toggleTheme() {
   const root = document.getElementById('appRoot');
   const isDark = root.getAttribute('data-theme') === 'dark';
   const newTheme = isDark ? 'light' : 'dark';
   root.setAttribute('data-theme', newTheme);
   localStorage.setItem('ltTheme', newTheme);
-  const track = document.getElementById('tsTrack');
-  const icon = document.getElementById('themeIcon');
-  const label = document.getElementById('themeLabel');
-  if (newTheme === 'dark') {
-    track.classList.add('on');
-    icon.textContent = '☀️';
-    label.textContent = 'Light Mode';
-  } else {
-    track.classList.remove('on');
-    icon.textContent = '🌙';
-    label.textContent = 'Dark Mode';
-  }
+  syncThemeToggleUi(newTheme);
 }
 // Load saved theme on startup
 (function() {
   const saved = localStorage.getItem('ltTheme') || 'light';
-  if (saved === 'dark') {
-    document.getElementById('appRoot').setAttribute('data-theme', 'dark');
-    setTimeout(() => {
-      const track = document.getElementById('tsTrack');
-      if (track) { track.classList.add('on'); }
-      const icon = document.getElementById('themeIcon');
-      if (icon) { icon.textContent = '☀️'; }
-      const label = document.getElementById('themeLabel');
-      if (label) { label.textContent = 'Light Mode'; }
-    }, 50);
-  }
+  document.getElementById('appRoot').setAttribute('data-theme', saved === 'dark' ? 'dark' : 'light');
+  syncThemeToggleUi(saved === 'dark' ? 'dark' : 'light');
 })();
 
 function getBrandingAdditionsFromControls() {
@@ -2615,10 +3036,81 @@ function applyStoreName(name) {
   if (adminName) adminName.textContent = `${clean} Admin`;
 }
 
+function syncSupabaseSettingInputs() {
+  const sbUrlInput = document.getElementById('settingsSbUrl');
+  const sbKeyInput = document.getElementById('settingsSbKey');
+  if (sbUrlInput) sbUrlInput.value = String(CFG.SUPABASE_URL || '').trim();
+  if (sbKeyInput) sbKeyInput.value = String(CFG.SUPABASE_PUBLISHABLE || CFG.SUPABASE_ANON || '').trim();
+}
+
+function normalizeMarqueeUrls(rawValue, fallbackUrls = []) {
+  const sourceList = Array.isArray(rawValue) ? rawValue : splitListValues(rawValue);
+  const urls = [];
+  const seen = new Set();
+  sourceList.forEach((value) => {
+    const normalized = normalizeImageUrl(value);
+    if (normalized && !seen.has(normalized)) {
+      seen.add(normalized);
+      urls.push(normalized);
+    }
+  });
+  if (urls.length) return urls.slice(0, 12);
+  return Array.isArray(fallbackUrls) ? [...fallbackUrls] : [];
+}
+
+function syncMarqueeInputControls() {
+  const electronicsInput = document.getElementById('marqueeUrlsElectronics');
+  const jewerlysInput = document.getElementById('marqueeUrlsJewerlys');
+  if (electronicsInput) electronicsInput.value = marqueeImageState.electronics.join('\n');
+  if (jewerlysInput) jewerlysInput.value = marqueeImageState.jewerlys.join('\n');
+}
+
+function renderImageMarquee(mode = storefrontMode) {
+  const track = document.getElementById('imageMarqueeTrack');
+  if (!track) return;
+  const scope = mode === 'jewerlys' ? 'jewerlys' : 'electronics';
+  const sourceUrls = marqueeImageState[scope]?.length ? marqueeImageState[scope] : DEFAULT_MARQUEE_IMAGES[scope];
+  if (!Array.isArray(sourceUrls) || !sourceUrls.length) {
+    track.innerHTML = '';
+    return;
+  }
+  const repeatedUrls = [...sourceUrls, ...sourceUrls];
+  const iconCats = MARQUEE_ICON_CATEGORIES[scope] || MARQUEE_ICON_CATEGORIES.electronics;
+  const scopeLabel = scope === 'jewerlys' ? 'Jewelry' : 'Electronics';
+  track.innerHTML = repeatedUrls.map((url, index) => {
+    const cat = iconCats[index % iconCats.length];
+    const safeUrl = escapeHtml(url);
+    const safeAlt = escapeHtml(`${scopeLabel} product image ${index % sourceUrls.length + 1}`);
+    return `
+      <div class="image-tile">
+        <img src="${safeUrl}" alt="${safeAlt}" loading="lazy" onerror="this.style.display='none'"/>
+        <span class="image-tile-icon" aria-hidden="true">${catIcon(cat)}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function applyMarqueeSettings(showToast = true) {
+  const electronicsRaw = document.getElementById('marqueeUrlsElectronics')?.value ?? marqueeImageState.electronics;
+  const jewerlysRaw = document.getElementById('marqueeUrlsJewerlys')?.value ?? marqueeImageState.jewerlys;
+  marqueeImageState = {
+    electronics: normalizeMarqueeUrls(electronicsRaw, DEFAULT_MARQUEE_IMAGES.electronics),
+    jewerlys: normalizeMarqueeUrls(jewerlysRaw, DEFAULT_MARQUEE_IMAGES.jewerlys),
+  };
+  syncMarqueeInputControls();
+  renderImageMarquee(storefrontMode);
+  if (showToast) toast('ok', 'Strip Updated', 'Moving strip images updated for Electronics and Jewerlys.');
+}
+
 function loadStoreSettings() {
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem('ltl2_store_settings') || 'null'); } catch (_) {}
-  if (!saved || typeof saved !== 'object') return;
+  syncSupabaseSettingInputs();
+  if (!saved || typeof saved !== 'object') {
+    syncMarqueeInputControls();
+    renderImageMarquee(storefrontMode);
+    return;
+  }
   const wa = document.getElementById('settingsWA');
   const sn = document.getElementById('settingsStoreName');
   const se = document.getElementById('settingsSupportEmail');
@@ -2626,6 +3118,21 @@ function loadStoreSettings() {
   if (sn && saved.storeName) sn.value = saved.storeName;
   if (se && saved.supportEmail) se.value = saved.supportEmail;
   if (saved.whatsapp) CFG.WHATSAPP = String(saved.whatsapp).trim();
+  if (saved.supabase && typeof saved.supabase === 'object') {
+    const storedUrl = String(saved.supabase.url || '').trim();
+    const storedKey = String(saved.supabase.publishable || saved.supabase.key || '').trim();
+    const storedAnon = String(saved.supabase.anon || '').trim();
+    if (storedUrl) CFG.SUPABASE_URL = storedUrl;
+    if (storedKey) CFG.SUPABASE_PUBLISHABLE = storedKey;
+    if (storedAnon) CFG.SUPABASE_ANON = storedAnon;
+    syncSupabaseSettingInputs();
+  }
+  if (saved.marquee && typeof saved.marquee === 'object') {
+    marqueeImageState.electronics = normalizeMarqueeUrls(saved.marquee.electronics, DEFAULT_MARQUEE_IMAGES.electronics);
+    marqueeImageState.jewerlys = normalizeMarqueeUrls(saved.marquee.jewerlys, DEFAULT_MARQUEE_IMAGES.jewerlys);
+  }
+  syncMarqueeInputControls();
+  renderImageMarquee(storefrontMode);
   applyStoreName(saved.storeName || 'Life Time Limited');
 }
 
@@ -2639,15 +3146,52 @@ function saveStoreSettings() {
   const wa = document.getElementById('settingsWA')?.value?.trim() || CFG.WHATSAPP;
   const storeName = document.getElementById('settingsStoreName')?.value?.trim() || 'Life Time Limited';
   const supportEmail = document.getElementById('settingsSupportEmail')?.value?.trim() || 'support@lifetimeltd.co.ke';
+  const sbUrlInput = String(document.getElementById('settingsSbUrl')?.value || CFG.SUPABASE_URL || '').trim();
+  const sbKeyInput = String(document.getElementById('settingsSbKey')?.value || CFG.SUPABASE_PUBLISHABLE || CFG.SUPABASE_ANON || '').trim();
+  const previousSbUrl = String(CFG.SUPABASE_URL || '').trim();
+  const previousSbKey = String(CFG.SUPABASE_PUBLISHABLE || CFG.SUPABASE_ANON || '').trim();
+
+  if (!/^https?:\/\//i.test(sbUrlInput)) {
+    toast('err', 'Invalid Supabase URL', 'Use a full https:// URL for your Supabase project.');
+    return;
+  }
+  if (isSupabaseServiceRoleKey(sbKeyInput)) {
+    toast('err', 'Unsafe Supabase Key', 'Use publishable/anon key only. Never use service-role or sb_secret keys in browser.');
+    return;
+  }
+  if (!isLikelySupabaseClientKey(sbKeyInput)) {
+    toast('err', 'Invalid Supabase Key', 'Use a valid Supabase publishable key or anon JWT.');
+    return;
+  }
+
+  applyMarqueeSettings(false);
   CFG.WHATSAPP = wa;
+  CFG.SUPABASE_URL = sbUrlInput;
+  CFG.SUPABASE_PUBLISHABLE = sbKeyInput;
+  if (/^eyJ[A-Za-z0-9_-]*\./.test(sbKeyInput)) CFG.SUPABASE_ANON = sbKeyInput;
   applyStoreName(storeName);
   applyBrandingSettings(false);
+  const supabaseChanged = sbUrlInput !== previousSbUrl || sbKeyInput !== previousSbKey;
   localStorage.setItem('ltl2_store_settings', JSON.stringify({
     whatsapp: wa,
     storeName,
     supportEmail,
+    supabase: {
+      url: sbUrlInput,
+      publishable: sbKeyInput,
+      anon: CFG.SUPABASE_ANON,
+    },
+    marquee: {
+      electronics: [...marqueeImageState.electronics],
+      jewerlys: [...marqueeImageState.jewerlys],
+    },
   }));
-  toast('ok', 'Settings Saved', 'Branding presets and additions updated');
+  if (supabaseChanged) {
+    toast('inf', 'Supabase Updated', 'Reloading page to apply new Supabase credentials.');
+    window.setTimeout(() => window.location.reload(), 700);
+    return;
+  }
+  toast('ok', 'Settings Saved', 'Store settings, branding, and moving strip images updated.');
 }
 
 // ===== BANNER IMAGE MANAGER =====
