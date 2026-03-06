@@ -2043,7 +2043,7 @@ textarea:focus-visible,
 }
 
 .p-card .p-card-img {
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 10 / 11;
   border: none;
   border-radius: 0;
   background: #f2f4f8;

@@ -214,6 +214,93 @@ begin
 end
 $$;
 
+-- Seed starter jewelry catalog (idempotent via slug).
+insert into public.products (
+  name, slug, category, brand, price, original_price, stock, badge, description,
+  variants, images, specs, sku, tagline, highlights, active
+)
+values
+  (
+    'Gold Layered Necklace Set', 'gold-layered-necklace-set', 'jewelry-necklaces', 'LTL Jewelry',
+    4999, 6500, 24, 'Hot', 'Elegant layered necklace set for daily wear and occasion styling.',
+    '["Classic Gold"]'::jsonb, '[]'::jsonb,
+    '{"Material":"Gold-plated alloy","Pieces":"3","Finish":"Polished","Closure":"Lobster clasp"}'::jsonb,
+    'LTL-NK-001', 'Layered elegance for everyday styling',
+    '["Gift ready","Lightweight","Daily wear"]'::jsonb, true
+  ),
+  (
+    'Sterling Silver Ring', 'sterling-silver-ring', 'jewelry-rings', 'LTL Jewelry',
+    3999, null, 18, 'New', 'Minimal sterling silver ring with comfortable fit and timeless look.',
+    '["Silver"]'::jsonb, '[]'::jsonb,
+    '{"Material":"925 Sterling Silver","Size":"Adjustable","Weight":"Lightweight","Finish":"Matte"}'::jsonb,
+    'LTL-RG-013', 'Minimal ring with timeless finish',
+    '["Adjustable fit","Gift option"]'::jsonb, true
+  ),
+  (
+    'Crystal Charm Bracelet', 'crystal-charm-bracelet', 'jewelry-bracelets', 'LTL Jewelry',
+    4599, 5200, 21, null, 'Adjustable crystal charm bracelet designed for gift-ready elegance.',
+    '["Rose Gold","Silver"]'::jsonb, '[]'::jsonb,
+    '{"Material":"Alloy + crystals","Length":"Adjustable","Closure":"Slide lock","Style":"Charm"}'::jsonb,
+    'LTL-BR-021', 'Charm bracelet with crystal accents',
+    '["Adjustable","Polished finish"]'::jsonb, true
+  ),
+  (
+    'Classic Jewelry Watch', 'classic-jewelry-watch', 'jewelry-watches', 'LTL Jewelry',
+    8999, 10500, 13, 'Sale', 'Fashion jewelry watch with slim dial and premium strap finish.',
+    '["Gold","Silver"]'::jsonb, '[]'::jsonb,
+    '{"Dial":"34mm","Strap":"Stainless steel","Water":"3ATM","Battery":"Quartz"}'::jsonb,
+    'LTL-JW-034', 'Fashion watch with elegant dial',
+    '["Gift option","Slim profile"]'::jsonb, true
+  ),
+  (
+    'Pearl Drop Earrings', 'pearl-drop-earrings', 'jewelry-earrings', 'LTL Jewelry',
+    3799, 4500, 26, 'Hot', 'Elegant pearl drop earrings with lightweight comfort and classic style.',
+    '["Ivory Pearl","Rose Pearl"]'::jsonb, '[]'::jsonb,
+    '{"Material":"Alloy + faux pearl","Length":"3.2cm","Closure":"Push back","Finish":"Gloss"}'::jsonb,
+    'LTL-ER-032', 'Classic pearl drop earrings',
+    '["Lightweight","Occasion ready"]'::jsonb, true
+  ),
+  (
+    'Minimalist Hoop Earrings', 'minimalist-hoop-earrings', 'jewelry-earrings', 'LTL Jewelry',
+    3299, null, 31, 'New', 'Everyday hoop earrings with polished finish for modern casual looks.',
+    '["Gold","Silver"]'::jsonb, '[]'::jsonb,
+    '{"Material":"Gold-plated steel","Diameter":"24mm","Weight":"Lightweight","Closure":"Latch back"}'::jsonb,
+    'LTL-ER-024', 'Clean modern hoop style',
+    '["Everyday use","Lightweight"]'::jsonb, true
+  ),
+  (
+    'Infinity Pendant Necklace', 'infinity-pendant-necklace', 'jewelry-necklaces', 'LTL Jewelry',
+    5499, 6200, 17, 'Sale', 'Infinity pendant necklace crafted for gifting and premium daily styling.',
+    '["Gold","Silver"]'::jsonb, '[]'::jsonb,
+    '{"Material":"Stainless steel","Chain":"Adjustable 40-45cm","Plating":"18K gold","Closure":"Lobster clasp"}'::jsonb,
+    'LTL-NK-045', 'Infinity pendant with premium plating',
+    '["Adjustable chain","Gift ready"]'::jsonb, true
+  ),
+  (
+    'Cubic Zirconia Ring Set', 'cz-ring-set', 'jewelry-rings', 'LTL Jewelry',
+    4699, 5300, 22, 'Hot', 'Sparkling cubic zirconia ring set with stackable slim-band design.',
+    '["Silver","Rose Gold"]'::jsonb, '[]'::jsonb,
+    '{"Material":"Sterling silver","Stone":"Cubic zirconia","Sizes":"6-9","Finish":"High polish"}'::jsonb,
+    'LTL-RG-069', 'Stackable CZ ring set',
+    '["Stackable design","Premium sparkle"]'::jsonb, true
+  )
+on conflict (slug) do update
+set
+  category = excluded.category,
+  brand = excluded.brand,
+  price = excluded.price,
+  original_price = excluded.original_price,
+  stock = excluded.stock,
+  badge = excluded.badge,
+  description = excluded.description,
+  variants = excluded.variants,
+  specs = excluded.specs,
+  sku = excluded.sku,
+  tagline = excluded.tagline,
+  highlights = excluded.highlights,
+  active = excluded.active,
+  updated_at = now();
+
 grant usage on schema public to anon, authenticated;
 grant select, insert, update, delete on public.products to anon, authenticated;
 grant select, insert, update, delete on public.orders to anon, authenticated;
