@@ -1885,8 +1885,34 @@ function renderCategoryChips() {
 // ============================================================
 // SUPABASE — Load Products
 // ============================================================
+function productSkeletonMarkup(count = 8) {
+  const total = Math.max(4, Math.min(12, Number(count) || 8));
+  return Array.from({ length: total }, () => `
+    <div class="p-card p-card-skeleton" aria-hidden="true">
+      <div class="p-card-img">
+        <div class="sk sk-media"></div>
+        <div class="p-card-body">
+          <div class="sk sk-line sk-brand"></div>
+          <div class="sk sk-line sk-name"></div>
+          <div class="sk sk-line sk-tag"></div>
+          <div class="p-card-footer">
+            <div class="sk sk-line sk-price"></div>
+            <div class="sk sk-btn"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderProductSkeletonCards(count = 8) {
+  const grid = document.getElementById('productsGrid');
+  if (!grid) return;
+  grid.innerHTML = productSkeletonMarkup(count);
+}
+
 async function loadProducts() {
-  document.getElementById('productsGrid').innerHTML = `<div class="loader"><div class="spinner"></div> Loading from database...</div>`;
+  renderProductSkeletonCards(8);
   if (!canUseSupabase()) {
     products = FALLBACK_PRODUCTS;
     dbOnline = false;

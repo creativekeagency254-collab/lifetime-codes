@@ -500,6 +500,32 @@ tbody td{padding:11px 14px;font-size:13px;color:var(--text2);vertical-align:midd
 .loader{display:flex;align-items:center;justify-content:center;padding:60px;gap:12px;color:var(--text3);font-size:13px}
 .spinner{width:22px;height:22px;border:2.5px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
+.p-card-skeleton{pointer-events:none}
+.p-card-skeleton .p-card-gradient,
+.p-card-skeleton .wish-btn,
+.p-card-skeleton .p-badge{display:none!important}
+.p-card-skeleton .p-card-img{position:relative;overflow:hidden}
+.p-card-skeleton .p-card-body{z-index:2}
+.sk{position:relative;overflow:hidden;background:#e6e8ef;border-radius:10px}
+.sk::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  transform:translateX(-100%);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent);
+  animation:skShimmer 1.2s infinite;
+}
+.sk-media{position:absolute;inset:0;border-radius:0}
+.sk-line{height:12px;margin-bottom:8px}
+.sk-brand{width:36%;height:10px}
+.sk-name{width:78%;height:18px}
+.sk-tag{width:64%;height:11px;margin-bottom:12px}
+.sk-price{width:46%;height:15px;margin-bottom:0}
+.sk-btn{width:42px;height:42px;border-radius:999px;background:#d8dce6}
+@keyframes skShimmer{100%{transform:translateX(100%)}}
+[data-theme="dark"] .sk{background:#2b313c}
+[data-theme="dark"] .sk-btn{background:#3a4251}
+[data-theme="dark"] .sk::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent)}
 .empty-state{text-align:center;padding:60px 40px}
 .empty-state svg{width:52px;height:52px;color:var(--text5);margin:0 auto 16px}
 .empty-state h3{font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--text2);margin-bottom:6px}
@@ -2550,8 +2576,8 @@ textarea:focus-visible,
   }
 }
 
-/* Laptop-only: make product cards 10% taller without changing mobile/desktop UX */
-@media (min-width: 901px) and (max-width: 1440px) {
+/* Laptop and larger: make product cards 10% taller */
+@media (min-width: 901px) {
   #productsGrid .p-card .p-card-img {
     aspect-ratio: 10 / 13.2;
   }
